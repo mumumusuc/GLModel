@@ -1,0 +1,322 @@
+# Blender MTL File: '0'
+# Material Count: 27
+
+newmtl 0
+Ns 0
+Ka 0.000000 0.000000 0.000000
+Kd 0.8 0.8 0.8
+Ks 0.8 0.8 0.8
+d 1
+illum 2
+
+newmtl 26
+Ns 96.078431
+Ka 1.000000 1.000000 1.000000
+Kd 0.655686 0.655686 0.655686
+Ks 0.039216 0.039216 0.039216
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd  0
+map_d  C:\\Users\\leonardo\\Desktop\\Star Voice as update V3\\bangs.png
+
+newmtl 25
+Ns 96.078431
+Ka 1.000000 1.000000 1.000000
+Kd 0.655686 0.655686 0.655686
+Ks 0.115686 0.115686 0.115686
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd  1
+map_d  C:\\Users\\leonardo\\Desktop\\Star Voice as update V3\\face.png
+
+newmtl 24
+Ns 96.078431
+Ka 1.000000 1.000000 1.000000
+Kd 0.655686 0.655686 0.655686
+Ks 0.058824 0.058824 0.058824
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd  2
+map_d  C:\\Users\\leonardo\\Desktop\\Star Voice as update V3\\dark.png
+
+newmtl 23
+Ns 96.078431
+Ka 1.000000 1.000000 1.000000
+Kd 0.655686 0.655686 0.655686
+Ks 0.029412 0.029412 0.029412
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd  3
+map_d  C:\\Users\\leonardo\\Desktop\\Star Voice as update V3\\sleeve.png
+
+newmtl 22
+Ns 96.078431
+Ka 1.000000 1.000000 1.000000
+Kd 0.655686 0.655686 0.655686
+Ks 0.058824 0.058824 0.058824
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd  4
+map_d  C:\\Users\\leonardo\\Desktop\\Star Voice as update V3\\skirt.png
+
+newmtl 21
+Ns 96.078431
+Ka 1.000000 1.000000 1.000000
+Kd 0.655686 0.655686 0.655686
+Ks 0.058824 0.058824 0.058824
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd  5
+map_d  C:\\Users\\leonardo\\Desktop\\Star Voice as update V3\\st.png
+
+newmtl 20
+Ns 96.078431
+Ka 1.000000 1.000000 1.000000
+Kd 0.655686 0.655686 0.655686
+Ks 0.058824 0.058824 0.058824
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd  6
+map_d  C:\\Users\\leonardo\\Desktop\\Star Voice as update V3\\stw.png
+
+newmtl 19
+Ns 96.078431
+Ka 1.000000 1.000000 1.000000
+Kd 0.655686 0.655686 0.655686
+Ks 0.058824 0.058824 0.058824
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd  7
+map_d  C:\\Users\\leonardo\\Desktop\\Star Voice as update V3\\glow.png
+
+newmtl 18
+Ns 96.078431
+Ka 1.000000 1.000000 1.000000
+Kd 0.655686 0.655686 0.655686
+Ks 0.058824 0.058824 0.058824
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd  8
+map_d  C:\\Users\\leonardo\\Desktop\\Star Voice as update V3\\pantsu.png
+
+newmtl 17
+Ns 96.078431
+Ka 1.000000 1.000000 1.000000
+Kd 0.655686 0.655686 0.655686
+Ks 0.058824 0.058824 0.058824
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd  9
+map_d  C:\\Users\\leonardo\\Desktop\\Star Voice as update V3\\tie.png
+
+newmtl 16
+Ns 96.078431
+Ka 1.000000 1.000000 1.000000
+Kd 0.655686 0.655686 0.655686
+Ks 0.058824 0.058824 0.058824
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd  10
+map_d  C:\\Users\\leonardo\\Desktop\\Star Voice as update V3\\glowst.png
+
+newmtl 15
+Ns 96.078431
+Ka 1.000000 1.000000 1.000000
+Kd 0.655686 0.655686 0.655686
+Ks 0.039216 0.039216 0.039216
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd  11
+map_d  C:\\Users\\leonardo\\Desktop\\Star Voice as update V3\\back.png
+
+newmtl 14
+Ns 96.078431
+Ka 1.000000 1.000000 1.000000
+Kd 0.655686 0.655686 0.655686
+Ks 0.115686 0.115686 0.115686
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd  1
+map_d  C:\\Users\\leonardo\\Desktop\\Star Voice as update V3\\face.png
+
+newmtl 13
+Ns 96.078431
+Ka 1.000000 1.000000 1.000000
+Kd 0.655686 0.655686 0.655686
+Ks 0.058824 0.058824 0.058824
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd  14
+map_d  C:\\Users\\leonardo\\Desktop\\Star Voice as update V3\\headset.png
+
+newmtl 12
+Ns 96.078431
+Ka 1.000000 1.000000 1.000000
+Kd 0.655686 0.655686 0.655686
+Ks 0.058824 0.058824 0.058824
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd  13
+map_d  C:\\Users\\leonardo\\Desktop\\Star Voice as update V3\\pin.png
+
+newmtl 11
+Ns 96.078431
+Ka 1.000000 1.000000 1.000000
+Kd 0.655686 0.655686 0.655686
+Ks 0.039216 0.039216 0.039216
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd  15
+map_d  C:\\Users\\leonardo\\Desktop\\Star Voice as update V3\\tail.png
+
+newmtl 10
+Ns 96.078431
+Ka 1.000000 1.000000 1.000000
+Kd 0.655686 0.655686 0.655686
+Ks 0.058824 0.058824 0.058824
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd  16
+map_d  C:\\Users\\leonardo\\Desktop\\Star Voice as update V3\\eye.png
+
+newmtl 9
+Ns 96.078431
+Ka 1.000000 1.000000 1.000000
+Kd 0.655686 0.655686 0.655686
+Ks 0.058824 0.058824 0.058824
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd  17
+map_d  C:\\Users\\leonardo\\Desktop\\Star Voice as update V3\\ribbon.png
+
+newmtl 8
+Ns 96.078431
+Ka 1.000000 1.000000 1.000000
+Kd 0.655686 0.655686 0.655686
+Ks 0.058824 0.058824 0.058824
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd  18
+map_d  C:\\Users\\leonardo\\Desktop\\Star Voice as update V3\\b.png
+
+newmtl 7
+Ns 96.078431
+Ka 1.000000 1.000000 1.000000
+Kd 0.655686 0.655686 0.655686
+Ks 0.115686 0.115686 0.115686
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd  19
+map_d  C:\\Users\\leonardo\\Desktop\\Star Voice as update V3\\skin.png
+
+newmtl 6
+Ns 96.078431
+Ka 1.000000 1.000000 1.000000
+Kd 0.655686 0.655686 0.655686
+Ks 0.058824 0.058824 0.058824
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd  16
+map_d  C:\\Users\\leonardo\\Desktop\\Star Voice as update V3\\eye.png
+
+newmtl 5
+Ns 96.078431
+Ka 1.000000 1.000000 1.000000
+Kd 0.655686 0.655686 0.655686
+Ks 0.058824 0.058824 0.058824
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd  20
+map_d  C:\\Users\\leonardo\\Desktop\\Star Voice as update V3\\ribbon1.png
+
+newmtl 4
+Ns 96.078431
+Ka 1.000000 1.000000 1.000000
+Kd 0.655686 0.655686 0.655686
+Ks 0.058824 0.058824 0.058824
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd  21
+map_d  C:\\Users\\leonardo\\Desktop\\Star Voice as update V3\\squares.png
+
+newmtl 3
+Ns 96.078431
+Ka 1.000000 1.000000 1.000000
+Kd 0.655686 0.655686 0.655686
+Ks 0.058824 0.058824 0.058824
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd  22
+map_d  C:\\Users\\leonardo\\Desktop\\Star Voice as update V3\\nail.png
+
+newmtl 2
+Ns 96.078431
+Ka 1.000000 1.000000 1.000000
+Kd 0.655686 0.655686 0.655686
+Ks 0.058824 0.058824 0.058824
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd  23
+map_d  C:\\Users\\leonardo\\Desktop\\Star Voice as update V3\\on.png
+
+newmtl 1
+Ns 96.078431
+Ka 1.000000 1.000000 1.000000
+Kd 0.655686 0.655686 0.655686
+Ks 0.058824 0.058824 0.058824
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd  12
+map_d  C:\\Users\\leonardo\\Desktop\\Star Voice as update V3\\top.png
