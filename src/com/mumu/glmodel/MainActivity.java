@@ -61,7 +61,7 @@ public class MainActivity extends Activity implements OnTouchListener{
     	mGLSurfaceView.queueEvent(new Runnable(){
 			@Override
 			public void run() {
-				mRender.glesClean();
+				mRender.clean();
 			}});
         super.onDestroy();
     }
@@ -86,7 +86,7 @@ public class MainActivity extends Activity implements OnTouchListener{
 			@Override
 			public void run() {
 				
-				mRender.glesRotateModel(deg, 0, 1, 0);
+				mRender.rotateModel(deg, 0, 1, 0);
 			}});  
 		return true;
 	}

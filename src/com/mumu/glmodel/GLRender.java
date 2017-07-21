@@ -8,9 +8,6 @@ import javax.microedition.khronos.opengles.GL10;
 import android.content.Context;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
-import android.graphics.Bitmap.Config;
-import android.graphics.BitmapFactory;
-import android.graphics.Matrix;
 import android.opengl.GLSurfaceView;
 import android.util.Log;
 
@@ -18,10 +15,11 @@ public class GLRender implements GLSurfaceView.Renderer {
 
 	private static final String TAG = "GLRender";
 
-	private final String VERTEX_SHADER_FILE = "shader/vs.glsl";
-	private final String FRAGMENT_SHADER_FILE = "shader/fs.glsl";
-	private final String MODEL_FILE = "model/cube";
+	private final String VERTEX_SHADER_FILE = "shader/vert.glsl";
+	private final String FRAGMENT_SHADER_FILE = "shader/frag.glsl";
+	private final String MODEL_FILE = "model/car.obj";
 
+	private int mProgHandler;
 	private Context mContext;
 	private String mVertexShader, mFragmentShader,mModel;
 
@@ -66,13 +64,14 @@ public class GLRender implements GLSurfaceView.Renderer {
 
 	@Override
 	public void onSurfaceCreated(GL10 gl, EGLConfig config) {
-		int mProgHandler = createProgram();
+		mProgHandler = createProgram(mVertexShader,mFragmentShader);
+		Log.i(TAG, "glprogram = "+mProgHandler);
 		if (mProgHandler < 0) {
-			Log.e(TAG, " error on create glprogram");
+			Log.e(TAG, " error on create glprogram > "+mProgHandler);
 			return;
 		}
-		initShader(mProgHandler, mVertexShader, mFragmentShader);
-		loadModel(mModel);
+//		initShader(mProgHandler, mVertexShader, mFragmentShader);
+		loadModel(mModel,null);
 
 /*		Bitmap[] textures = new Bitmap[24];
 		textures[0] = resizeBmp(BitmapFactory.decodeResource(mContext.getResources(), R.mipmap.bangs));
@@ -106,16 +105,16 @@ public class GLRender implements GLSurfaceView.Renderer {
 		}*/
 	}
 
-	private Bitmap resizeBmp(Bitmap bitmap) {
-		if (bitmap.getWidth() > 512 || bitmap.getHeight() > 512) {
-			Matrix matrix = new Matrix();
-			float scale = 256.0f / (bitmap.getWidth() > bitmap.getHeight() ? bitmap.getWidth() : bitmap.getHeight());
-			matrix.postScale(scale, scale); // ³¤ºÍ¿í·Å´óËõÐ¡µÄ±ÈÀý
-			Bitmap resizeBmp = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
-			return resizeBmp;
-		}
-		return bitmap;
-	}
+//	private Bitmap resizeBmp(Bitmap bitmap) {
+//		if (bitmap.getWidth() > 512 || bitmap.getHeight() > 512) {
+//			Matrix matrix = new Matrix();
+//			float scale = 256.0f / (bitmap.getWidth() > bitmap.getHeight() ? bitmap.getWidth() : bitmap.getHeight());
+//			matrix.postScale(scale, scale); // ï¿½ï¿½ï¿½Í¿ï¿½Å´ï¿½ï¿½ï¿½Ð¡ï¿½Ä±ï¿½ï¿½ï¿½
+//			Bitmap resizeBmp = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+//			return resizeBmp;
+//		}
+//		return bitmap;
+//	}
 
 	@Override
 	public void onSurfaceChanged(GL10 gl, int width, int height) {
@@ -124,24 +123,24 @@ public class GLRender implements GLSurfaceView.Renderer {
 
 	@Override
 	public void onDrawFrame(GL10 gl) {
-		render();
+		render(mProgHandler);
 	}
 
-	public final native int createProgram();
+	public final native int createProgram(String vert,String frag);
 
 	public final native void resizeWindow(int width, int height);
 
-	public final native void initShader(int prog, String vertex, String fragment);
+	public final native void initShader(int prog,String vertex, String fragment);
 
-	public final native void loadModel(String model);
+	public final native void loadModel(String model,String mtl);
 
-	public final native void render();
+	public final native void render(int program);
 
 	public final native int loadBitmapTextrue(Bitmap[] textures);
 
-	public final native void glesRotateModel(float deg, float x, float y, float z);
+	public final native void rotateModel(float deg, float x, float y, float z);
 
-	public final native void glesClean();
+	public final native void clean();
 	
 	static {
 		System.loadLibrary("GLRender");

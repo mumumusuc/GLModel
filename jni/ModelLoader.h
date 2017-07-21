@@ -2,9 +2,8 @@
 #include <stdio.h>
 #include <vector>
 #include <string>
-#include <android/log.h>
-#include <android/asset_manager_jni.h>
 #include <sstream>
+#include <android/log.h>
 #include "include/vmath.h"
 
 #define TAG "NDK_ModelLoader"
@@ -14,7 +13,7 @@
 using namespace std;
 using namespace vmath;
 
-//..���ʽṹ��
+//材质
 struct Material {
 	string::size_type i;
 	unsigned int code;
@@ -25,15 +24,29 @@ struct Material {
 	int mtl_index;
 };
 
-void inline __clearMaterial__(Material &mtl) {
-	mtl.mtl_index = -1;
-}
+struct ModelObject {
+	//顶点
+	vector<vec3> v;
+	//顶点索引
+	vector<uvec3> fv;
+	//法向量
+	vector<vec3> vn;
+	//法向量索引
+	vector<uvec3> fn;
+	//材质
+	vector<vec2> vt;
+	//材质索引
+	vector<uvec3> ft;
+};
 
-vector<string> split(string, string);
+class ModelLoader {
+public:
+	ModelLoader() = default;
+	~ModelLoader() = default;
+public:
+	ModelObject loadObject(const char*);
+	void destroyObject(ModelObject);
 
-char* readModelSrcFile(char*, AAssetManager*);
+	void loadMaterial(const char*);
+};
 
-bool loadMtl(const char*, vector<Material>&);
-
-bool loadOBJ(const char*, vector<vec3> &, vector<vec2> &, vector<vec3> &,
-		vector<vec3> &);

@@ -1,7 +1,6 @@
 #output stuffs
 Debug/
 Release/
-obj/
 
 # Built application files
 *.apk
