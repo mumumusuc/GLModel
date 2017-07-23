@@ -22,7 +22,7 @@ Java_com_mumu_glmodel_GLRender_createProgram(JNIEnv* env, jobject obj,
 		glGetProgramiv(progHandler, GL_INFO_LOG_LENGTH, &infoLen);
 		if (infoLen > 1) {
 			char *infoLog = static_cast<char*>(malloc(sizeof(char) * infoLen));
-			glGetProgramInfoLog(progHandler, infoLen, NULL, infoLog);
+			glGetProgramInfoLog(progHandler, infoLen, 0, infoLog);
 			LOGE("Error linking program:[%s]", infoLog);
 			free(infoLog);
 		}
@@ -38,6 +38,8 @@ Java_com_mumu_glmodel_GLRender_resizeWindow(JNIEnv* env, jobject obj,
 		jint width, jint height) {
 	g_width = width;
 	g_height = height;
+	float aspect = (float) g_height / g_width;
+	g_proj = frustum(-2.0f, 2.0f, -2.0f * aspect, 2.0f * aspect, 10.0f, 800.0f);
 	glViewport(0, 0, g_width, g_height);
 }
 
@@ -85,29 +87,23 @@ Java_com_mumu_glmodel_GLRender_loadModel(JNIEnv* env, jobject obj,
 	glGenBuffers(2, vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
 	glBufferData(
-			GL_ARRAY_BUFFER,
-			v_size * 3 * sizeof(GLfloat),
-			&object.v[0],
-			GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (GLubyte *) NULL);
+	GL_ARRAY_BUFFER, v_size * 3 * sizeof(GLfloat), &object.v[0],
+	GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (GLubyte *) 0);
 	glEnableVertexAttribArray(0);
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
 	glBufferData(
-			GL_ARRAY_BUFFER,
-			n_size * 3 * sizeof(GLfloat),
-			&object.vn[0],
-			GL_STATIC_DRAW);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (GLubyte *) NULL);
+	GL_ARRAY_BUFFER, n_size * 3 * sizeof(GLfloat), &object.vn[0],
+	GL_STATIC_DRAW);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (GLubyte *) 0);
 	glEnableVertexAttribArray(1);
 
 	glGenBuffers(1, &ebo);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
 	glBufferData(
-			GL_ELEMENT_ARRAY_BUFFER,
-			f_size * 3 * sizeof(GLuint),
-			&object.fv[0],
-			GL_STATIC_DRAW);
+	GL_ELEMENT_ARRAY_BUFFER, f_size * 3 * sizeof(GLuint), &object.fv[0],
+	GL_STATIC_DRAW);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
 
 	glBindVertexArray(0);
@@ -134,12 +130,12 @@ Java_com_mumu_glmodel_GLRender_loadModel(JNIEnv* env, jobject obj,
 }
 
 int loadTexture(BmpTexture texture) {
-	if (texture.img_pixels == NULL) {
+	if (texture.img_pixels == 0) {
 		LOGE("load texture failed! invalid image");
 		return ERROR;
 	}
 	LOGI("img_config: data=%s , width=%d , height=%d",
-			texture.img_pixels==NULL?"invalid":"valid", texture.img_w,
+			texture.img_pixels == 0 ? "invalid" : "valid", texture.img_w,
 			texture.img_h);
 	glTexImage2D(
 	GL_TEXTURE_2D, 0, GL_RGBA, texture.img_w, texture.img_h, 0,
@@ -158,21 +154,15 @@ Java_com_mumu_glmodel_GLRender_render(JNIEnv* env, jobject obj, jint prog) {
 	glEnable(GL_TEXTURE_2D);
 	glUseProgram(prog);
 
-	float aspect = (float) g_height / g_width;
-	mat4 m_proj(
-			frustum(-2.0f, 2.0f, -2.0f * aspect, 2.0f * aspect, 10.0f, 800.0f));
 	glUniformMatrix4fv(glGetUniformLocation(prog, "m_proj"), 1, GL_FALSE,
-			m_proj);
-
-	mat4 m_model = translate(0.0f, 0.0f, -400.0f);
-	m_model *= rotate(g_deg, 1.0f, 0.0f, 0.0f);
+			g_proj * g_camera);
 	glUniformMatrix4fv(glGetUniformLocation(prog, "m_model"), 1, GL_FALSE,
-			m_model);
+			g_model_loc * g_model_ges);
 
 	glUniform1i(glGetUniformLocation(prog, "u_use_light"), GL_TRUE);
 
-	glUniform3f(glGetUniformLocation(prog, "u_light_position"), 0.0f, 0.0f,
-			10.0f);
+	glUniform3f(glGetUniformLocation(prog, "u_light_position"),
+			light_position[0], light_position[1], light_position[2]);
 	glUniform3f(glGetUniformLocation(prog, "u_eye_position"), eye_position[0],
 			eye_position[1], eye_position[2]);
 	glUniform4f(glGetUniformLocation(prog, "u_ambient"), ambient[0], ambient[1],
@@ -239,10 +229,17 @@ JNIEXPORT void JNICALL Java_com_mumu_glmodel_GLRender_clean(JNIEnv *pEnv,
 }
 
 JNIEXPORT void JNICALL Java_com_mumu_glmodel_GLRender_rotateModel(JNIEnv *pEnv,
-		jobject obj, jfloat deg, jfloat x, jfloat y, jfloat z) {
-	g_deg = deg;
-	g_x = x;
-	g_y = y;
-	g_z = z;
+		jobject obj, jfloat deg_x, jfloat deg_y, jfloat deg_z, jfloat x,
+		jfloat y, jfloat z) {
+	float _x = x == 0 ? 0 : x / abs(x);
+	float _y = y == 0 ? 0 : y / abs(y);
+	float _z = z == 0 ? 0 : z / abs(z);
+	g_model_ges = rotate(deg_x, _x, 0.0f, 0.0f) * rotate(deg_y, 0.0f, _y, 0.0f)
+			* g_model_ges;
+	if (deg_z > 1 || deg_z < -1) {
+		mat4 trans = translate(deg_z * normalize(v_model_loc - v_camera_loc));
+		g_camera = trans * g_camera;
+		v_camera_loc = vec3(g_camera[3][0], g_camera[3][1], g_camera[3][2]);
+	}
 }
 

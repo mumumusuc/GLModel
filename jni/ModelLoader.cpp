@@ -53,15 +53,15 @@ ModelObject ModelLoader::loadObject(const char* obj) {
 					strcpy(str, temp[i].c_str());
 					char *s = str, *p;
 					p = strsep(&s, "/");
-					if (p != NULL) {
+					if (p != 0) {
 						t_fv[i] = atoi(p) - 1;
 					}
 					p = strsep(&s, "/");
-					if (p != NULL) {
+					if (p != 0) {
 						t_ft[i] = atoi(p) - 1;
 					}
 					p = strsep(&s, "/");
-					if (p != NULL) {
+					if (p != 0) {
 						t_fn[i] = atoi(p) - 1;
 					}
 				//	LOGI("fvtn = %d,%d,%d\n", t_fv[0], t_ft[0], t_fn[0]);

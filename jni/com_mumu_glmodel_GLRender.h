@@ -61,7 +61,7 @@ JNIEXPORT jint JNICALL Java_com_mumu_glmodel_GLRender_loadBitmapTextrue
  * Signature: (FFFF)V
  */
 JNIEXPORT void JNICALL Java_com_mumu_glmodel_GLRender_rotateModel
-  (JNIEnv *, jobject, jfloat, jfloat, jfloat, jfloat);
+  (JNIEnv *, jobject, jfloat, jfloat,jfloat,jfloat, jfloat, jfloat);
 
 /*
  * Class:     com_mumu_glmodel_GLRender

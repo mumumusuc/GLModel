@@ -21,7 +21,7 @@ public class GLRender implements GLSurfaceView.Renderer {
 
 	private int mProgHandler;
 	private Context mContext;
-	private String mVertexShader, mFragmentShader,mModel;
+	private String mVertexShader, mFragmentShader, mModel;
 
 	public GLRender(Context context) {
 		mContext = context;
@@ -31,7 +31,7 @@ public class GLRender implements GLSurfaceView.Renderer {
 		}
 		mVertexShader = readAssert(mAssetMgr, VERTEX_SHADER_FILE);
 		mFragmentShader = readAssert(mAssetMgr, FRAGMENT_SHADER_FILE);
-		mModel = readAssert(mAssetMgr,MODEL_FILE);
+		mModel = readAssert(mAssetMgr, MODEL_FILE);
 		Log.i(TAG, "mVertexShader -> " + mVertexShader);
 		Log.i(TAG, "mFragmentShader -> " + mFragmentShader);
 	}
@@ -64,57 +64,82 @@ public class GLRender implements GLSurfaceView.Renderer {
 
 	@Override
 	public void onSurfaceCreated(GL10 gl, EGLConfig config) {
-		mProgHandler = createProgram(mVertexShader,mFragmentShader);
-		Log.i(TAG, "glprogram = "+mProgHandler);
+		mProgHandler = createProgram(mVertexShader, mFragmentShader);
+		Log.i(TAG, "glprogram = " + mProgHandler);
 		if (mProgHandler < 0) {
-			Log.e(TAG, " error on create glprogram > "+mProgHandler);
+			Log.e(TAG, " error on create glprogram > " + mProgHandler);
 			return;
 		}
-//		initShader(mProgHandler, mVertexShader, mFragmentShader);
-		loadModel(mModel,null);
+		// initShader(mProgHandler, mVertexShader, mFragmentShader);
+		loadModel(mModel, null);
 
-/*		Bitmap[] textures = new Bitmap[24];
-		textures[0] = resizeBmp(BitmapFactory.decodeResource(mContext.getResources(), R.mipmap.bangs));
-		textures[1] = resizeBmp(BitmapFactory.decodeResource(mContext.getResources(), R.mipmap.face));
-		textures[2] = resizeBmp(BitmapFactory.decodeResource(mContext.getResources(), R.mipmap.dark));
-		textures[3] = resizeBmp(BitmapFactory.decodeResource(mContext.getResources(), R.mipmap.sleeve));
-		textures[4] = resizeBmp(BitmapFactory.decodeResource(mContext.getResources(), R.mipmap.skirt));
-		textures[5] = resizeBmp(BitmapFactory.decodeResource(mContext.getResources(), R.mipmap.st));
-		textures[6] = resizeBmp(BitmapFactory.decodeResource(mContext.getResources(), R.mipmap.stw));
-		textures[7] = resizeBmp(BitmapFactory.decodeResource(mContext.getResources(), R.mipmap.glow));
-		textures[8] = resizeBmp(BitmapFactory.decodeResource(mContext.getResources(), R.mipmap.pantsu));
-		textures[9] = resizeBmp(BitmapFactory.decodeResource(mContext.getResources(), R.mipmap.tie));
-		textures[10] = resizeBmp(BitmapFactory.decodeResource(mContext.getResources(), R.mipmap.glowst));
-		textures[11] = resizeBmp(BitmapFactory.decodeResource(mContext.getResources(), R.mipmap.back));
-		textures[12] = resizeBmp(BitmapFactory.decodeResource(mContext.getResources(), R.mipmap.top));
-		textures[13] = resizeBmp(BitmapFactory.decodeResource(mContext.getResources(), R.mipmap.pin));
-		textures[14] = resizeBmp(BitmapFactory.decodeResource(mContext.getResources(), R.mipmap.headset));
-		textures[15] = resizeBmp(BitmapFactory.decodeResource(mContext.getResources(), R.mipmap.tail));
-		textures[16] = resizeBmp(BitmapFactory.decodeResource(mContext.getResources(), R.mipmap.eye));
-		textures[17] = resizeBmp(BitmapFactory.decodeResource(mContext.getResources(), R.mipmap.ribbon));
-		textures[18] = resizeBmp(BitmapFactory.decodeResource(mContext.getResources(), R.mipmap.b));
-		textures[19] = resizeBmp(BitmapFactory.decodeResource(mContext.getResources(), R.mipmap.skin));
-		textures[20] = resizeBmp(BitmapFactory.decodeResource(mContext.getResources(), R.mipmap.ribbon1));
-		textures[21] = resizeBmp(BitmapFactory.decodeResource(mContext.getResources(), R.mipmap.squares));
-		textures[22] = resizeBmp(BitmapFactory.decodeResource(mContext.getResources(), R.mipmap.nail));
-		textures[23] = resizeBmp(BitmapFactory.decodeResource(mContext.getResources(), R.mipmap.on));
-		loadBitmapTextrue(textures);
-		for (int i = 0; i < textures.length; i++) {
-			if (textures[i] != null)
-				textures[i].recycle();
-		}*/
+		/*
+		 * Bitmap[] textures = new Bitmap[24]; textures[0] =
+		 * resizeBmp(BitmapFactory.decodeResource(mContext.getResources(),
+		 * R.mipmap.bangs)); textures[1] =
+		 * resizeBmp(BitmapFactory.decodeResource(mContext.getResources(),
+		 * R.mipmap.face)); textures[2] =
+		 * resizeBmp(BitmapFactory.decodeResource(mContext.getResources(),
+		 * R.mipmap.dark)); textures[3] =
+		 * resizeBmp(BitmapFactory.decodeResource(mContext.getResources(),
+		 * R.mipmap.sleeve)); textures[4] =
+		 * resizeBmp(BitmapFactory.decodeResource(mContext.getResources(),
+		 * R.mipmap.skirt)); textures[5] =
+		 * resizeBmp(BitmapFactory.decodeResource(mContext.getResources(),
+		 * R.mipmap.st)); textures[6] =
+		 * resizeBmp(BitmapFactory.decodeResource(mContext.getResources(),
+		 * R.mipmap.stw)); textures[7] =
+		 * resizeBmp(BitmapFactory.decodeResource(mContext.getResources(),
+		 * R.mipmap.glow)); textures[8] =
+		 * resizeBmp(BitmapFactory.decodeResource(mContext.getResources(),
+		 * R.mipmap.pantsu)); textures[9] =
+		 * resizeBmp(BitmapFactory.decodeResource(mContext.getResources(),
+		 * R.mipmap.tie)); textures[10] =
+		 * resizeBmp(BitmapFactory.decodeResource(mContext.getResources(),
+		 * R.mipmap.glowst)); textures[11] =
+		 * resizeBmp(BitmapFactory.decodeResource(mContext.getResources(),
+		 * R.mipmap.back)); textures[12] =
+		 * resizeBmp(BitmapFactory.decodeResource(mContext.getResources(),
+		 * R.mipmap.top)); textures[13] =
+		 * resizeBmp(BitmapFactory.decodeResource(mContext.getResources(),
+		 * R.mipmap.pin)); textures[14] =
+		 * resizeBmp(BitmapFactory.decodeResource(mContext.getResources(),
+		 * R.mipmap.headset)); textures[15] =
+		 * resizeBmp(BitmapFactory.decodeResource(mContext.getResources(),
+		 * R.mipmap.tail)); textures[16] =
+		 * resizeBmp(BitmapFactory.decodeResource(mContext.getResources(),
+		 * R.mipmap.eye)); textures[17] =
+		 * resizeBmp(BitmapFactory.decodeResource(mContext.getResources(),
+		 * R.mipmap.ribbon)); textures[18] =
+		 * resizeBmp(BitmapFactory.decodeResource(mContext.getResources(),
+		 * R.mipmap.b)); textures[19] =
+		 * resizeBmp(BitmapFactory.decodeResource(mContext.getResources(),
+		 * R.mipmap.skin)); textures[20] =
+		 * resizeBmp(BitmapFactory.decodeResource(mContext.getResources(),
+		 * R.mipmap.ribbon1)); textures[21] =
+		 * resizeBmp(BitmapFactory.decodeResource(mContext.getResources(),
+		 * R.mipmap.squares)); textures[22] =
+		 * resizeBmp(BitmapFactory.decodeResource(mContext.getResources(),
+		 * R.mipmap.nail)); textures[23] =
+		 * resizeBmp(BitmapFactory.decodeResource(mContext.getResources(),
+		 * R.mipmap.on)); loadBitmapTextrue(textures); for (int i = 0; i <
+		 * textures.length; i++) { if (textures[i] != null)
+		 * textures[i].recycle(); }
+		 */
 	}
 
-//	private Bitmap resizeBmp(Bitmap bitmap) {
-//		if (bitmap.getWidth() > 512 || bitmap.getHeight() > 512) {
-//			Matrix matrix = new Matrix();
-//			float scale = 256.0f / (bitmap.getWidth() > bitmap.getHeight() ? bitmap.getWidth() : bitmap.getHeight());
-//			matrix.postScale(scale, scale); // ���Ϳ�Ŵ���С�ı���
-//			Bitmap resizeBmp = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
-//			return resizeBmp;
-//		}
-//		return bitmap;
-//	}
+	// private Bitmap resizeBmp(Bitmap bitmap) {
+	// if (bitmap.getWidth() > 512 || bitmap.getHeight() > 512) {
+	// Matrix matrix = new Matrix();
+	// float scale = 256.0f / (bitmap.getWidth() > bitmap.getHeight() ?
+	// bitmap.getWidth() : bitmap.getHeight());
+	// matrix.postScale(scale, scale); // ���Ϳ�Ŵ���С�ı���
+	// Bitmap resizeBmp = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(),
+	// bitmap.getHeight(), matrix, true);
+	// return resizeBmp;
+	// }
+	// return bitmap;
+	// }
 
 	@Override
 	public void onSurfaceChanged(GL10 gl, int width, int height) {
@@ -126,25 +151,24 @@ public class GLRender implements GLSurfaceView.Renderer {
 		render(mProgHandler);
 	}
 
-	public final native int createProgram(String vert,String frag);
+	public final native int createProgram(String vert, String frag);
 
 	public final native void resizeWindow(int width, int height);
 
-	public final native void initShader(int prog,String vertex, String fragment);
+	public final native void initShader(int prog, String vertex, String fragment);
 
-	public final native void loadModel(String model,String mtl);
+	public final native void loadModel(String model, String mtl);
 
 	public final native void render(int program);
 
 	public final native int loadBitmapTextrue(Bitmap[] textures);
 
-	public final native void rotateModel(float deg, float x, float y, float z);
+	public final native void rotateModel(float dx, float dy, float dz, float x, float y, float z);
 
 	public final native void clean();
-	
+
 	static {
 		System.loadLibrary("GLRender");
 	}
-
 
 }
