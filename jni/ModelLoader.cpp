@@ -77,15 +77,15 @@ ModelObject ModelLoader::loadObject(const char* obj) {
 				}
 				if (push_fv) {
 					model.fv.push_back(t_fv);
-				//	LOGI("push fv = %d,%d,%d\n", t_fv[0],t_fv[1],t_fv[2]);
+					//	LOGI("push fv = %d,%d,%d\n", t_fv[0],t_fv[1],t_fv[2]);
 				}
 				if (push_ft) {
 					model.ft.push_back(t_ft);
-				//	LOGI("push ft = %d,%d,%d\n", t_ft[0],t_ft[1],t_ft[2]);
+					//	LOGI("push ft = %d,%d,%d\n", t_ft[0],t_ft[1],t_ft[2]);
 				}
 				if (push_fn) {
 					model.fn.push_back(t_fn);
-				//	LOGI("push fn = %d,%d,%d\n", t_fn[0],t_fn[1],t_fn[2]);
+					//	LOGI("push fn = %d,%d,%d\n", t_fn[0],t_fn[1],t_fn[2]);
 				}
 			}
 		}
@@ -100,16 +100,17 @@ ModelObject ModelLoader::loadObject(const char* obj) {
 
 void ModelLoader::buildIndice(ModelObject& obj) {
 	int size = 0, i;
+	int v_size = obj.v.size();
 	if ((size = obj.fn.size())) {
-		vector<vec3> t_vn;
+		vector<vec3> t_vn(v_size);
 		for (i = 0; i < size; i++) {
 //			 vec3 nor = normalize(obj.vn[obj.fn[i][0]] + obj.vn[obj.fn[i][1]] + obj.vn[obj.fn[i][2]]);
 //			 t_vn.push_back(nor);
 //			 t_vn.push_back(nor);
 //			 t_vn.push_back(nor);
-			t_vn.push_back((vec3) obj.vn[obj.fn[i][0]]);
-			t_vn.push_back((vec3) obj.vn[obj.fn[i][1]]);
-			t_vn.push_back((vec3) obj.vn[obj.fn[i][2]]);
+			t_vn[obj.fv[i][0]] = obj.vn[obj.fn[i][0]];
+			t_vn[obj.fv[i][1]] = obj.vn[obj.fn[i][1]];
+			t_vn[obj.fv[i][2]] = obj.vn[obj.fn[i][2]];
 		}
 		obj.vn.clear();
 		vector<vec3>(obj.vn).swap(obj.vn);
@@ -119,11 +120,14 @@ void ModelLoader::buildIndice(ModelObject& obj) {
 	}
 
 	if ((size = obj.ft.size())) {
-		vector<vec2> t_vt;
+		vector<vec2> t_vt(v_size);
 		for (i = 0; i < size; i++) {
-			t_vt.push_back((vec2) obj.vt[obj.ft[i][0]]);
-			t_vt.push_back((vec2) obj.vt[obj.ft[i][1]]);
-			t_vt.push_back((vec2) obj.vt[obj.ft[i][2]]);
+//			t_vt.push_back((vec2) obj.vt[obj.ft[i][0]]);
+//			t_vt.push_back((vec2) obj.vt[obj.ft[i][1]]);
+//			t_vt.push_back((vec2) obj.vt[obj.ft[i][2]]);
+			t_vt[obj.fv[i][0]] = obj.vt[obj.ft[i][0]];
+			t_vt[obj.fv[i][1]] = obj.vt[obj.ft[i][1]];
+			t_vt[obj.fv[i][2]] = obj.vt[obj.ft[i][2]];
 		}
 		obj.vt.clear();
 		vector<vec2>(obj.vt).swap(obj.vt);

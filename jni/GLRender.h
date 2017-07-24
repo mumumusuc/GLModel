@@ -28,7 +28,7 @@ vec3 v_camera_loc(0.0f, 0.0f, 50.0f);
 mat4 g_camera = lookat(v_camera_loc, v_model_loc, vec3(0.0f, 1.0f, 0.0f));
 
 GLuint vbo[3], nbo, vao, ubo, ebo, h_texture;
-vector<BmpTexture> g_textures;
+std::vector<BmpTexture> g_textures;
 
 GLfloat ambient[4] = { 1.0, 1.0, 1.0, 0.3 };
 GLfloat light_color[3] = { 0.8, 0.8, 0.8 };
@@ -40,4 +40,5 @@ GLfloat Ns = 8;
 GLfloat attenuation = 0.1;
 
 int useTexture(BmpTexture);
+int initShader(GLint , const char*, const char*);
 

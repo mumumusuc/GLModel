@@ -22,7 +22,7 @@ struct BmpTexture {
 
 //材质
 struct Material {
-	string::size_type i;
+	std::string::size_type i;
 	unsigned int code;
 	float Ns;
 	vec3 Ka;

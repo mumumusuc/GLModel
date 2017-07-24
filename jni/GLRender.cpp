@@ -10,9 +10,11 @@ Java_com_mumu_glmodel_GLRender_createProgram(JNIEnv* env, jobject obj,
 	progHandler = glCreateProgram();
 	if (progHandler == 0)
 		return -1;
-
-	Java_com_mumu_glmodel_GLRender_initShader(env, obj, progHandler, vert,
-			frag);
+	const char* _vertexShader = env->GetStringUTFChars(vert, 0);
+	const char* _fragmentShader = env->GetStringUTFChars(frag, 0);
+	initShader(progHandler, _vertexShader, _fragmentShader);
+	env->ReleaseStringUTFChars(vert, _vertexShader);
+	env->ReleaseStringUTFChars(frag, _fragmentShader);
 
 	glLinkProgram(progHandler);
 	glGetProgramiv(progHandler, GL_LINK_STATUS, &linked);
@@ -53,14 +55,20 @@ Java_com_mumu_glmodel_GLRender_initShader(JNIEnv *env, jobject self, jint prog,
 	}
 	const char* _vertexShader = env->GetStringUTFChars(vertex, 0);
 	const char* _fragmentShader = env->GetStringUTFChars(fragment, 0);
-	GLuint vertexShader;
-	GLuint fragmentShader;
-	vertexShader = loadShader(GL_VERTEX_SHADER, _vertexShader);
-	fragmentShader = loadShader(GL_FRAGMENT_SHADER, _fragmentShader);
-	glAttachShader(prog, vertexShader);
-	glAttachShader(prog, fragmentShader);
+	initShader(prog, _vertexShader, _fragmentShader);
 	env->ReleaseStringUTFChars(vertex, _vertexShader);
 	env->ReleaseStringUTFChars(fragment, _fragmentShader);
+}
+
+int initShader(GLint prog, const char* vertexShader,
+		const char* fragmentShader) {
+	GLuint h_vertexShader;
+	GLuint h_fragmentShader;
+	h_vertexShader = loadShader(GL_VERTEX_SHADER, vertexShader);
+	h_fragmentShader = loadShader(GL_FRAGMENT_SHADER, fragmentShader);
+	glAttachShader(prog, h_vertexShader);
+	glAttachShader(prog, h_fragmentShader);
+	return 0;
 }
 
 unsigned int v_size, f_size, n_size, t_size;
@@ -137,7 +145,7 @@ Java_com_mumu_glmodel_GLRender_render(JNIEnv* env, jobject obj, jint prog) {
 	glUniformMatrix4fv(glGetUniformLocation(prog, "m_model"), 1, GL_FALSE,
 			g_model_loc * g_model_ges);
 
-	glUniform1i(glGetUniformLocation(prog, "u_use_light"), GL_FALSE);
+	glUniform1i(glGetUniformLocation(prog, "u_use_light"), GL_TRUE);
 
 	glUniform3f(glGetUniformLocation(prog, "u_light_position"),
 			light_position[0], light_position[1], light_position[2]);
@@ -235,7 +243,7 @@ JNIEXPORT void JNICALL Java_com_mumu_glmodel_GLRender_clean(JNIEnv *pEnv,
 	glDeleteBuffers(1, &ebo);
 	glDeleteVertexArrays(1, &vao);
 	for (int i = 0; i < g_textures.size(); i++) {
-		free(g_textures[i].img_pixels);
+		free(((BmpTexture) g_textures[i]).img_pixels);
 	}
 	g_textures.clear();
 	vector<BmpTexture>(g_textures).swap(g_textures);
