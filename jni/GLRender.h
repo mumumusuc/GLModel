@@ -24,16 +24,11 @@ mat4 g_model_ges = rotate(0.0f, 1.0f, 0.0f, 0.0f);
 vec3 v_model_loc(0.0f, 0.0f, 0.0f);
 mat4 g_model_loc = translate(v_model_loc);
 mat4 g_proj;
-vec3 v_camera_loc(0.0f, 0.0f, 400.0f);
+vec3 v_camera_loc(0.0f, 0.0f, 50.0f);
 mat4 g_camera = lookat(v_camera_loc, v_model_loc, vec3(0.0f, 1.0f, 0.0f));
 
-struct BmpTexture {
-	void* img_pixels;
-	int img_w;
-	int img_h;
-};
-
-GLuint vbo[2], nbo, vao, ubo, ebo;
+GLuint vbo[3], nbo, vao, ubo, ebo, h_texture;
+vector<BmpTexture> g_textures;
 
 GLfloat ambient[4] = { 1.0, 1.0, 1.0, 0.3 };
 GLfloat light_color[3] = { 0.8, 0.8, 0.8 };
@@ -44,5 +39,5 @@ GLfloat ground_color[3] = { 0.2, 0.2, 0.2 };
 GLfloat Ns = 8;
 GLfloat attenuation = 0.1;
 
-std::vector<BmpTexture> textures;
-GLuint _texture;
+int useTexture(BmpTexture);
+

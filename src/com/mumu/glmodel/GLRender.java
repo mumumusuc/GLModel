@@ -8,6 +8,8 @@ import javax.microedition.khronos.opengles.GL10;
 import android.content.Context;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.opengl.GLSurfaceView;
 import android.util.Log;
 
@@ -17,7 +19,7 @@ public class GLRender implements GLSurfaceView.Renderer {
 
 	private final String VERTEX_SHADER_FILE = "shader/vert.glsl";
 	private final String FRAGMENT_SHADER_FILE = "shader/frag.glsl";
-	private final String MODEL_FILE = "model/car.obj";
+	private final String MODEL_FILE = "model/cube.obj";
 
 	private int mProgHandler;
 	private Context mContext;
@@ -70,11 +72,10 @@ public class GLRender implements GLSurfaceView.Renderer {
 			Log.e(TAG, " error on create glprogram > " + mProgHandler);
 			return;
 		}
-		// initShader(mProgHandler, mVertexShader, mFragmentShader);
 		loadModel(mModel, null);
 
+		Bitmap[] textures = new Bitmap[1];
 		/*
-		 * Bitmap[] textures = new Bitmap[24]; textures[0] =
 		 * resizeBmp(BitmapFactory.decodeResource(mContext.getResources(),
 		 * R.mipmap.bangs)); textures[1] =
 		 * resizeBmp(BitmapFactory.decodeResource(mContext.getResources(),
@@ -126,20 +127,24 @@ public class GLRender implements GLSurfaceView.Renderer {
 		 * textures.length; i++) { if (textures[i] != null)
 		 * textures[i].recycle(); }
 		 */
+		textures[0] = resizeBmp(BitmapFactory.decodeResource(mContext.getResources(), R.mipmap.tex));
+		loadBitmapTextrue(textures);
+		for (int i = 0; i < textures.length; i++) {
+			if (textures[i] != null)
+				textures[i].recycle();
+		}
 	}
 
-	// private Bitmap resizeBmp(Bitmap bitmap) {
-	// if (bitmap.getWidth() > 512 || bitmap.getHeight() > 512) {
-	// Matrix matrix = new Matrix();
-	// float scale = 256.0f / (bitmap.getWidth() > bitmap.getHeight() ?
-	// bitmap.getWidth() : bitmap.getHeight());
-	// matrix.postScale(scale, scale); // ���Ϳ�Ŵ���С�ı���
-	// Bitmap resizeBmp = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(),
-	// bitmap.getHeight(), matrix, true);
-	// return resizeBmp;
-	// }
-	// return bitmap;
-	// }
+	private Bitmap resizeBmp(Bitmap bitmap) {
+		if (bitmap.getWidth() > 512 || bitmap.getHeight() > 512) {
+			Matrix matrix = new Matrix();
+			float scale = 256.0f / (bitmap.getWidth() > bitmap.getHeight() ? bitmap.getWidth() : bitmap.getHeight());
+			matrix.postScale(scale, scale);
+			Bitmap resizeBmp = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+			return resizeBmp;
+		}
+		return bitmap;
+	}
 
 	@Override
 	public void onSurfaceChanged(GL10 gl, int width, int height) {

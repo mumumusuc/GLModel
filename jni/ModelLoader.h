@@ -13,6 +13,13 @@
 using namespace std;
 using namespace vmath;
 
+//纹理
+struct BmpTexture {
+	void* img_pixels;
+	int img_w;
+	int img_h;
+};
+
 //材质
 struct Material {
 	string::size_type i;
@@ -46,7 +53,9 @@ public:
 public:
 	ModelObject loadObject(const char*);
 	void destroyObject(ModelObject);
-
 	void loadMaterial(const char*);
+
+private:
+	void buildIndice(ModelObject& obj);
 };
 

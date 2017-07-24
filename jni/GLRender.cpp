@@ -39,7 +39,8 @@ Java_com_mumu_glmodel_GLRender_resizeWindow(JNIEnv* env, jobject obj,
 	g_width = width;
 	g_height = height;
 	float aspect = (float) g_height / g_width;
-	g_proj = frustum(-2.0f, 2.0f, -2.0f * aspect, 2.0f * aspect, 10.0f, 800.0f);
+	g_proj = frustum(-2.0f, 2.0f, -2.0f * aspect, 2.0f * aspect, 10.0f,
+			8000.0f);
 	glViewport(0, 0, g_width, g_height);
 }
 
@@ -62,7 +63,7 @@ Java_com_mumu_glmodel_GLRender_initShader(JNIEnv *env, jobject self, jint prog,
 	env->ReleaseStringUTFChars(fragment, _fragmentShader);
 }
 
-unsigned int v_size, f_size, n_size;
+unsigned int v_size, f_size, n_size, t_size;
 
 JNIEXPORT void JNICALL
 Java_com_mumu_glmodel_GLRender_loadModel(JNIEnv* env, jobject obj,
@@ -77,14 +78,17 @@ Java_com_mumu_glmodel_GLRender_loadModel(JNIEnv* env, jobject obj,
 
 	v_size = object.v.size();
 	n_size = object.vn.size();
+	t_size = object.vt.size();
 	f_size = object.fv.size();
-	LOGI("vertex_size = %d ,n_size = %d, face_size = %d\n", v_size, n_size,
-			f_size);
+
+	LOGI(
+			"vertex_size = %d ,normal_size = %d, texture_size = %d, face_size = %d\n",
+			v_size, n_size, t_size, f_size);
 
 	glGenVertexArrays(1, &vao);
 	glBindVertexArray(vao);
 
-	glGenBuffers(2, vbo);
+	glGenBuffers(3, vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
 	glBufferData(
 	GL_ARRAY_BUFFER, v_size * 3 * sizeof(GLfloat), &object.v[0],
@@ -99,6 +103,13 @@ Java_com_mumu_glmodel_GLRender_loadModel(JNIEnv* env, jobject obj,
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (GLubyte *) 0);
 	glEnableVertexAttribArray(1);
 
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[2]);
+	glBufferData(
+	GL_ARRAY_BUFFER, t_size * 2 * sizeof(GLfloat), &object.vt[0],
+	GL_STATIC_DRAW);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, (GLubyte *) 0);
+	glEnableVertexAttribArray(2);
+
 	glGenBuffers(1, &ebo);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
 	glBufferData(
@@ -107,41 +118,8 @@ Java_com_mumu_glmodel_GLRender_loadModel(JNIEnv* env, jobject obj,
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
 
 	glBindVertexArray(0);
-	/*	if (out_normals.size()) {
-	 glGenBuffers(1, &nbo);
-	 glBindBuffer(GL_ARRAY_BUFFER, nbo);
-	 glBufferData(GL_ARRAY_BUFFER, out_normals.size() * sizeof(vec3),
-	 &out_normals[0], GL_STATIC_DRAW);
-	 glEnableVertexAttribArray(1);
-	 glBindBuffer(GL_ARRAY_BUFFER, nbo);
-	 glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, NULL);
-	 }
-	 if (out_uvs.size()) {
-	 glGenBuffers(1, &ubo);
-	 glBindBuffer(GL_ARRAY_BUFFER, ubo);
-	 glBufferData(GL_ARRAY_BUFFER, out_uvs.size() * sizeof(vec2),
-	 &out_uvs[0], GL_STATIC_DRAW);
-	 glEnableVertexAttribArray(2);
-	 glBindBuffer(GL_ARRAY_BUFFER, ubo);
-	 glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, NULL);
-	 }*/
 	env->ReleaseStringUTFChars(model, _model);
 	mLoader.destroyObject(object);
-}
-
-int loadTexture(BmpTexture texture) {
-	if (texture.img_pixels == 0) {
-		LOGE("load texture failed! invalid image");
-		return ERROR;
-	}
-	LOGI("img_config: data=%s , width=%d , height=%d",
-			texture.img_pixels == 0 ? "invalid" : "valid", texture.img_w,
-			texture.img_h);
-	glTexImage2D(
-	GL_TEXTURE_2D, 0, GL_RGBA, texture.img_w, texture.img_h, 0,
-	GL_RGBA,
-	GL_UNSIGNED_BYTE, texture.img_pixels);
-	return 1;
 }
 
 JNIEXPORT void JNICALL
@@ -159,7 +137,7 @@ Java_com_mumu_glmodel_GLRender_render(JNIEnv* env, jobject obj, jint prog) {
 	glUniformMatrix4fv(glGetUniformLocation(prog, "m_model"), 1, GL_FALSE,
 			g_model_loc * g_model_ges);
 
-	glUniform1i(glGetUniformLocation(prog, "u_use_light"), GL_TRUE);
+	glUniform1i(glGetUniformLocation(prog, "u_use_light"), GL_FALSE);
 
 	glUniform3f(glGetUniformLocation(prog, "u_light_position"),
 			light_position[0], light_position[1], light_position[2]);
@@ -171,12 +149,16 @@ Java_com_mumu_glmodel_GLRender_render(JNIEnv* env, jobject obj, jint prog) {
 			light_color[1], light_color[2]);
 	glUniform1f(glGetUniformLocation(prog, "u_Ns"), Ns);
 	glUniform1f(glGetUniformLocation(prog, "u_attenuation"), attenuation);
+	glUniform1i(glGetUniformLocation(prog, "u_use_texture"), GL_TRUE);
 
 	glBindVertexArray(vao);
 //	glDrawArrays(GL_TRIANGLES, 0, v_size);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, h_texture);
+	glUniform1i(glGetUniformLocation(prog, "u_sampler"), 0);
 	glDrawElements(GL_TRIANGLES, 3 * f_size, GL_UNSIGNED_INT, 0);
 	glBindVertexArray(0);
-
+	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 JNIEXPORT int Java_com_mumu_glmodel_GLRender_loadBitmapTextrue(JNIEnv* env,
@@ -184,48 +166,52 @@ JNIEXPORT int Java_com_mumu_glmodel_GLRender_loadBitmapTextrue(JNIEnv* env,
 	jsize size = env->GetArrayLength(jbitmaps);
 	if (size == 0)
 		return -1;
-
 	AndroidBitmapInfo bitmapInfo;
 	BmpTexture texture;
-
 	for (int i = 0; i < size; i++) {
 		jobject bmp = env->GetObjectArrayElement(jbitmaps, i);
-
 		if (AndroidBitmap_getInfo(env, bmp, &bitmapInfo) < 0) {
 			LOGE("AndroidBitmap_getInfo() failed !");
 			return -1;
 		}
 		texture.img_w = bitmapInfo.width;
 		texture.img_h = bitmapInfo.height;
-
 		if (bitmapInfo.format != ANDROID_BITMAP_FORMAT_RGBA_8888) {
-			LOGE(
-					"Java_com_example_hellojni_HelloJni_showBitmap invalid rgb format");
+			LOGE("invalid rgb format");
 			return -1;
 		}
-
 		if (AndroidBitmap_lockPixels(env, bmp, &texture.img_pixels) < 0) {
-			LOGE("AndroidBitmap_lockPixels() failed !");
+			LOGE("AndroidBitmap_lockPixels failed !");
 		}
-
-		textures.push_back(texture);
+		g_textures.push_back(texture);
+		useTexture(texture);
 		AndroidBitmap_unlockPixels(env, bmp);
 	}
+	return 0;
+}
+
+int useTexture(BmpTexture texture) {
+	if (texture.img_pixels == 0) {
+		LOGE("load texture failed! invalid image");
+		return ERROR;
+	}
+	LOGI("img_config: data=%s , width=%d , height=%d",
+			texture.img_pixels == 0 ? "invalid" : "valid", texture.img_w,
+			texture.img_h);
 	glActiveTexture(GL_TEXTURE0);
-	glGenTextures(1, &_texture);
-	glBindTexture(GL_TEXTURE_2D, _texture);
+	glGenTextures(1, &h_texture);
+	glBindTexture(GL_TEXTURE_2D, h_texture);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexImage2D(
+	GL_TEXTURE_2D, 0, GL_RGBA, texture.img_w, texture.img_h, 0,
+	GL_RGBA,
+	GL_UNSIGNED_BYTE, texture.img_pixels);
+//	free(texture.img_pixels);
+	glBindTexture(GL_TEXTURE_2D, 0);
 	return 0;
-}
-
-JNIEXPORT void JNICALL Java_com_mumu_glmodel_GLRender_clean(JNIEnv *pEnv,
-		jobject obj) {
-	glDeleteBuffers(2, vbo);
-	glDeleteBuffers(1, &ebo);
-	glDeleteVertexArrays(1, &vao);
 }
 
 JNIEXPORT void JNICALL Java_com_mumu_glmodel_GLRender_rotateModel(JNIEnv *pEnv,
@@ -236,10 +222,21 @@ JNIEXPORT void JNICALL Java_com_mumu_glmodel_GLRender_rotateModel(JNIEnv *pEnv,
 	float _z = z == 0 ? 0 : z / abs(z);
 	g_model_ges = rotate(deg_x, _x, 0.0f, 0.0f) * rotate(deg_y, 0.0f, _y, 0.0f)
 			* g_model_ges;
-	if (deg_z > 1 || deg_z < -1) {
+	if (deg_z != 0) {
 		mat4 trans = translate(deg_z * normalize(v_model_loc - v_camera_loc));
 		g_camera = trans * g_camera;
 		v_camera_loc = vec3(g_camera[3][0], g_camera[3][1], g_camera[3][2]);
 	}
 }
 
+JNIEXPORT void JNICALL Java_com_mumu_glmodel_GLRender_clean(JNIEnv *pEnv,
+		jobject obj) {
+	glDeleteBuffers(3, vbo);
+	glDeleteBuffers(1, &ebo);
+	glDeleteVertexArrays(1, &vao);
+	for (int i = 0; i < g_textures.size(); i++) {
+		free(g_textures[i].img_pixels);
+	}
+	g_textures.clear();
+	vector<BmpTexture>(g_textures).swap(g_textures);
+}

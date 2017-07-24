@@ -69,42 +69,41 @@ public class MainActivity extends Activity implements OnTouchListener {
 
 	private float deg_x = 0, deg_y = 0, d_z = 0;
 	private float x = 0, y = 0, x_1 = 0, y_1 = 0;
-private double d = 0;
-	
+	private double d = 0;
+
 	@Override
 	public boolean onTouch(View arg0, MotionEvent event) {
 		switch (event.getAction() & MotionEvent.ACTION_MASK) {
 		case MotionEvent.ACTION_DOWN:
 			deg_x = 0;
 			deg_y = 0;
+			d_z = 0;
+			d = 0;
 			x = event.getX();
 			y = event.getY();
 			break;
 		case MotionEvent.ACTION_POINTER_DOWN:
 			x_1 = event.getX(1);
 			y_1 = event.getY(1);
-			d_z = 0;
-			d = 0;
-			deg_x = 0;
-			deg_y = 0;
 			break;
 		case MotionEvent.ACTION_MOVE:
 			int cnt = event.getPointerCount();
 			if (cnt == 1) {
 				if (event.getX() - x > 30)
-					deg_x = (deg_x + 0.1f) % 360;
+					deg_x = 1f;
 				else if (event.getX() - x < -30)
-					deg_x = (deg_x - 0.1f) % 360;
+					deg_x = -1f;
 				if (event.getY() - y > 30)
-					deg_y = (deg_y + 0.1f) % 360;
+					deg_y = 1f;
 				else if (event.getY() - y < -30)
-					deg_y = (deg_y - 0.1f) % 360;
+					deg_y = -1f;
 			} else {
 				double t = Math.sqrt((x_1 - x) * (x_1 - x) + (y_1 - y) * (y_1 - y));
+				d_z = 0 ;
 				if (t - d > 20) {
-					d_z += 1;
-				}else if(t -d < -20){
-					d_z -= 1;
+					d_z = 1;
+				} else if (t - d < -20) {
+					d_z = -1;
 				}
 				d = t;
 				x_1 = event.getX(1);
@@ -117,6 +116,9 @@ private double d = 0;
 			if (event.getPointerCount() <= 1) {
 				d_z = 0;
 			}
+			break;
+		case MotionEvent.ACTION_UP:
+				d_z = 0;
 			break;
 		default:
 			return false;
