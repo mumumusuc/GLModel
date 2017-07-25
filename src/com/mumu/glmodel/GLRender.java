@@ -11,7 +11,9 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.opengl.GLSurfaceView;
+import android.os.AsyncTask;
 import android.util.Log;
+import android.widget.Toast;
 
 public class GLRender implements GLSurfaceView.Renderer {
 
@@ -20,8 +22,10 @@ public class GLRender implements GLSurfaceView.Renderer {
 	private final String VERTEX_SHADER_FILE = "shader/vert.glsl";
 	private final String FRAGMENT_SHADER_FILE = "shader/frag.glsl";
 	private final String MODEL_FILE = "model/cube.obj";
+	private final String MTL_FILE = null;
 
 	private int mProgHandler;
+	ModelStruct[] models;
 	private Context mContext;
 	private String mVertexShader, mFragmentShader, mModel;
 
@@ -72,67 +76,14 @@ public class GLRender implements GLSurfaceView.Renderer {
 			Log.e(TAG, " error on create glprogram > " + mProgHandler);
 			return;
 		}
-		loadModel(mModel, null);
-
-		Bitmap[] textures = new Bitmap[1];
+		loadModelMaterial(mModel, null);
 		/*
+		 * Bitmap[] textures = new Bitmap[1]; textures[0] =
 		 * resizeBmp(BitmapFactory.decodeResource(mContext.getResources(),
-		 * R.mipmap.bangs)); textures[1] =
-		 * resizeBmp(BitmapFactory.decodeResource(mContext.getResources(),
-		 * R.mipmap.face)); textures[2] =
-		 * resizeBmp(BitmapFactory.decodeResource(mContext.getResources(),
-		 * R.mipmap.dark)); textures[3] =
-		 * resizeBmp(BitmapFactory.decodeResource(mContext.getResources(),
-		 * R.mipmap.sleeve)); textures[4] =
-		 * resizeBmp(BitmapFactory.decodeResource(mContext.getResources(),
-		 * R.mipmap.skirt)); textures[5] =
-		 * resizeBmp(BitmapFactory.decodeResource(mContext.getResources(),
-		 * R.mipmap.st)); textures[6] =
-		 * resizeBmp(BitmapFactory.decodeResource(mContext.getResources(),
-		 * R.mipmap.stw)); textures[7] =
-		 * resizeBmp(BitmapFactory.decodeResource(mContext.getResources(),
-		 * R.mipmap.glow)); textures[8] =
-		 * resizeBmp(BitmapFactory.decodeResource(mContext.getResources(),
-		 * R.mipmap.pantsu)); textures[9] =
-		 * resizeBmp(BitmapFactory.decodeResource(mContext.getResources(),
-		 * R.mipmap.tie)); textures[10] =
-		 * resizeBmp(BitmapFactory.decodeResource(mContext.getResources(),
-		 * R.mipmap.glowst)); textures[11] =
-		 * resizeBmp(BitmapFactory.decodeResource(mContext.getResources(),
-		 * R.mipmap.back)); textures[12] =
-		 * resizeBmp(BitmapFactory.decodeResource(mContext.getResources(),
-		 * R.mipmap.top)); textures[13] =
-		 * resizeBmp(BitmapFactory.decodeResource(mContext.getResources(),
-		 * R.mipmap.pin)); textures[14] =
-		 * resizeBmp(BitmapFactory.decodeResource(mContext.getResources(),
-		 * R.mipmap.headset)); textures[15] =
-		 * resizeBmp(BitmapFactory.decodeResource(mContext.getResources(),
-		 * R.mipmap.tail)); textures[16] =
-		 * resizeBmp(BitmapFactory.decodeResource(mContext.getResources(),
-		 * R.mipmap.eye)); textures[17] =
-		 * resizeBmp(BitmapFactory.decodeResource(mContext.getResources(),
-		 * R.mipmap.ribbon)); textures[18] =
-		 * resizeBmp(BitmapFactory.decodeResource(mContext.getResources(),
-		 * R.mipmap.b)); textures[19] =
-		 * resizeBmp(BitmapFactory.decodeResource(mContext.getResources(),
-		 * R.mipmap.skin)); textures[20] =
-		 * resizeBmp(BitmapFactory.decodeResource(mContext.getResources(),
-		 * R.mipmap.ribbon1)); textures[21] =
-		 * resizeBmp(BitmapFactory.decodeResource(mContext.getResources(),
-		 * R.mipmap.squares)); textures[22] =
-		 * resizeBmp(BitmapFactory.decodeResource(mContext.getResources(),
-		 * R.mipmap.nail)); textures[23] =
-		 * resizeBmp(BitmapFactory.decodeResource(mContext.getResources(),
-		 * R.mipmap.on)); loadBitmapTextrue(textures); for (int i = 0; i <
+		 * R.mipmap.tex)); loadBitmapTextrue(textures); for (int i = 0; i <
 		 * textures.length; i++) { if (textures[i] != null)
 		 * textures[i].recycle(); }
 		 */
-		textures[0] = resizeBmp(BitmapFactory.decodeResource(mContext.getResources(), R.mipmap.tex));
-		loadBitmapTextrue(textures);
-		for (int i = 0; i < textures.length; i++) {
-			if (textures[i] != null)
-				textures[i].recycle();
-		}
 	}
 
 	private Bitmap resizeBmp(Bitmap bitmap) {
@@ -153,20 +104,30 @@ public class GLRender implements GLSurfaceView.Renderer {
 
 	@Override
 	public void onDrawFrame(GL10 gl) {
-		render(mProgHandler);
+		if (models != null)
+			render(mProgHandler, models[0]);
+	}
+
+	private void render(int prog, ModelStruct model) {
+		render(prog, model._H_VAO, model.mVertexSize, model._H_texture, model.mTextureUnit);
+	}
+
+	public void loadModelMaterial(String model, String mtl) {
+		new LoadAsyncTask().execute(model, mtl);
 	}
 
 	public final native int createProgram(String vert, String frag);
 
 	public final native void resizeWindow(int width, int height);
 
-	public final native void initShader(int prog, String vertex, String fragment);
+	private final native ModelStruct[] loadModel(String model, String mtl);
 
-	public final native void loadModel(String model, String mtl);
+	/* [vao, _size, _texture, _texture_unit, vbo(v),vbo(t),vbo(n)] */
+	private final native int[] genRenderArgs(ModelStruct model);
 
-	public final native void render(int program);
+	private final native void render(int prog, int _vao, int _size, int _texture, int _texture_unit);
 
-	public final native int loadBitmapTextrue(Bitmap[] textures);
+	private final native int loadBitmapTextrue(Bitmap[] textures);
 
 	public final native void rotateModel(float dx, float dy, float dz, float x, float y, float z);
 
@@ -174,6 +135,34 @@ public class GLRender implements GLSurfaceView.Renderer {
 
 	static {
 		System.loadLibrary("GLRender");
+	}
+
+	class LoadAsyncTask extends AsyncTask<String, Integer, String> {
+		@Override
+		protected void onPreExecute() {
+			super.onPreExecute();
+			// Toast.makeText(mContext, "load model", Toast.LENGTH_LONG).show();
+			Log.i(TAG, "load model");
+		}
+
+		@Override
+		protected String doInBackground(String... arg0) {
+			long s = System.currentTimeMillis();
+			models = loadModel(arg0[0], arg0.length > 1 ? arg0[1] : null);
+			Log.d(TAG, "models_size=" + models.length);
+			if (models.length > 0) {
+				Log.d(TAG, models[0].toString());
+			}
+
+			return "load done, use " + (System.currentTimeMillis() - s) + " ms";
+		}
+
+		@Override
+		protected void onPostExecute(String result) {
+			super.onPostExecute(result);
+			// Toast.makeText(mContext, result, Toast.LENGTH_LONG).show();
+			Log.i(TAG, result);
+		}
 	}
 
 }

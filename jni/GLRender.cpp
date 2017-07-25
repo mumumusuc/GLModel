@@ -1,20 +1,34 @@
 #include "GLRender.h"
 
-using namespace vmath;
+jint g_width;
+jint g_height;
+mat4 g_model_ges = rotate(0.0f, 1.0f, 0.0f, 0.0f);
+vec3 v_model_loc(0.0f, 0.0f, 0.0f);
+mat4 g_model_loc = translate(v_model_loc);
+mat4 g_proj;
+vec3 v_camera_loc(0.0f, 0.0f, 50.0f);
+mat4 g_camera = lookat(v_camera_loc, v_model_loc, vec3(0.0f, 1.0f, 0.0f));
 
-JNIEXPORT int JNICALL
-Java_com_mumu_glmodel_GLRender_createProgram(JNIEnv* env, jobject obj,
-		jstring vert, jstring frag) {
+//GLuint vbo[3], vao, h_texture;
+//uint v_size;
+//std::vector<BmpTexture> g_textures;
+
+GLfloat ambient[4] = { 1.0, 1.0, 1.0, 0.3 };
+GLfloat light_color[3] = { 0.8, 0.8, 0.8 };
+GLfloat light_position[3] = { 0.0f, 0.0f, 400.0f };
+GLfloat eye_position[3] = { 0.0, 10.0, 30.0 };
+GLfloat sky_color[3] = { 0.7, 0.7, 1.0 };
+GLfloat ground_color[3] = { 0.2, 0.2, 0.2 };
+GLfloat Ns = 8;
+GLfloat attenuation = 0.1;
+
+int createProgram(const char* vert, const char* frag) {
 	GLint progHandler = ERROR;
 	GLint linked;
 	progHandler = glCreateProgram();
 	if (progHandler == 0)
 		return -1;
-	const char* _vertexShader = env->GetStringUTFChars(vert, 0);
-	const char* _fragmentShader = env->GetStringUTFChars(frag, 0);
-	initShader(progHandler, _vertexShader, _fragmentShader);
-	env->ReleaseStringUTFChars(vert, _vertexShader);
-	env->ReleaseStringUTFChars(frag, _fragmentShader);
+	initShader(progHandler, vert, frag);
 
 	glLinkProgram(progHandler);
 	glGetProgramiv(progHandler, GL_LINK_STATUS, &linked);
@@ -35,29 +49,13 @@ Java_com_mumu_glmodel_GLRender_createProgram(JNIEnv* env, jobject obj,
 	return progHandler;
 }
 
-JNIEXPORT void JNICALL
-Java_com_mumu_glmodel_GLRender_resizeWindow(JNIEnv* env, jobject obj,
-		jint width, jint height) {
+void resizeWindow(uint width, uint height) {
 	g_width = width;
 	g_height = height;
 	float aspect = (float) g_height / g_width;
 	g_proj = frustum(-2.0f, 2.0f, -2.0f * aspect, 2.0f * aspect, 10.0f,
 			8000.0f);
 	glViewport(0, 0, g_width, g_height);
-}
-
-JNIEXPORT void JNICALL
-Java_com_mumu_glmodel_GLRender_initShader(JNIEnv *env, jobject self, jint prog,
-		jstring vertex, jstring fragment) {
-	if (!prog) {
-		LOGE("initShader -> bad program argument");
-		return;
-	}
-	const char* _vertexShader = env->GetStringUTFChars(vertex, 0);
-	const char* _fragmentShader = env->GetStringUTFChars(fragment, 0);
-	initShader(prog, _vertexShader, _fragmentShader);
-	env->ReleaseStringUTFChars(vertex, _vertexShader);
-	env->ReleaseStringUTFChars(fragment, _fragmentShader);
 }
 
 int initShader(GLint prog, const char* vertexShader,
@@ -71,73 +69,81 @@ int initShader(GLint prog, const char* vertexShader,
 	return 0;
 }
 
-unsigned int v_size, f_size, n_size, t_size;
-
-JNIEXPORT void JNICALL
-Java_com_mumu_glmodel_GLRender_loadModel(JNIEnv* env, jobject obj,
-		jstring model, jstring mtl) {
-	if (!model) {
-		LOGE("loadModel -> bad model argment");
-		return;
+GLuint loadShader(GLenum type, const char *shaderSrc) {
+	GLuint shader;
+	GLint compiled;
+	shader = glCreateShader(type);
+	if (shader == 0) {
+		return 0;
 	}
-	const char* _model = env->GetStringUTFChars(model, 0);
-	ModelLoader mLoader;
-	ModelObject object = mLoader.loadObject(_model);
+	glShaderSource(shader, 1, &shaderSrc, 0);
+	glCompileShader(shader);
+	glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
+	if (!compiled) {
+		GLint infoLen = 0;
+		glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLen);
+		if (infoLen > 1) {
+			char *infoLog = static_cast<char*>(malloc(sizeof(char) * infoLen));
+			glGetShaderInfoLog(shader, infoLen, 0, infoLog);
+			LOGE("Error compiling shader:[%s]", infoLog);
+			free(infoLog);
+		}
+		glDeleteShader(shader);
+		return 0;
+	}
+	return shader;
+}
 
-	v_size = object.v.size();
-	n_size = object.vn.size();
-	t_size = object.vt.size();
-	f_size = object.fv.size();
-
-	LOGI(
-			"vertex_size = %d ,normal_size = %d, texture_size = %d, face_size = %d\n",
-			v_size, n_size, t_size, f_size);
-
+void bindBuffers(GLfloat* vertex, uint v_size, GLfloat* texture, uint t_size,
+		GLfloat* normals, uint n_size, GLuint* result) {
+	LOGI("vertex->size=%d,value=%f,%f,%f",v_size,vertex[0],vertex[1],vertex[2]);
+	GLuint vao;
 	glGenVertexArrays(1, &vao);
 	glBindVertexArray(vao);
-
+	GLuint vbo[3];
 	glGenBuffers(3, vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
 	glBufferData(
-	GL_ARRAY_BUFFER, v_size * 3 * sizeof(GLfloat), &object.v[0],
+	GL_ARRAY_BUFFER, v_size * sizeof(GLfloat), vertex,
 	GL_STATIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (GLubyte *) 0);
 	glEnableVertexAttribArray(0);
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
 	glBufferData(
-	GL_ARRAY_BUFFER, n_size * 3 * sizeof(GLfloat), &object.vn[0],
+	GL_ARRAY_BUFFER, t_size * sizeof(GLfloat), texture,
 	GL_STATIC_DRAW);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (GLubyte *) 0);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (GLubyte *) 0);
 	glEnableVertexAttribArray(1);
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[2]);
 	glBufferData(
-	GL_ARRAY_BUFFER, t_size * 2 * sizeof(GLfloat), &object.vt[0],
+	GL_ARRAY_BUFFER, n_size * sizeof(GLfloat), normals,
 	GL_STATIC_DRAW);
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, (GLubyte *) 0);
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (GLubyte *) 0);
 	glEnableVertexAttribArray(2);
 
-	glGenBuffers(1, &ebo);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-	glBufferData(
-	GL_ELEMENT_ARRAY_BUFFER, f_size * 3 * sizeof(GLuint), &object.fv[0],
-	GL_STATIC_DRAW);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-
 	glBindVertexArray(0);
-	env->ReleaseStringUTFChars(model, _model);
-	mLoader.destroyObject(object);
+	LOGI("result = [%d,%d,%d,%d]", vao, vbo[0], vbo[1], vbo[2]);
+	result[0] = vao;
+	result[1] = vbo[0];
+	result[2] = vbo[1];
+	result[3] = vbo[2];
 }
 
-JNIEXPORT void JNICALL
-Java_com_mumu_glmodel_GLRender_render(JNIEnv* env, jobject obj, jint prog) {
+void render(GLuint prog, GLuint _vao, uint _size, GLuint _texture,
+		GLuint _texture_unit) {
+	LOGI("render -> %d,%d,%d,%d,%d", prog, _vao, _size, _texture, _texture_unit);
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 	glEnable(GL_DEPTH_TEST);
 	glClear(GL_DEPTH_BUFFER_BIT);
 	glDepthFunc(GL_LEQUAL);
 	glEnable(GL_TEXTURE_2D);
+//	glEnable(GL_CULL_FACE);
+//	glCullFace(GL_BACK);
+//	glFrontFace(GL_CCW);
+
 	glUseProgram(prog);
 
 	glUniformMatrix4fv(glGetUniformLocation(prog, "m_proj"), 1, GL_FALSE,
@@ -145,7 +151,7 @@ Java_com_mumu_glmodel_GLRender_render(JNIEnv* env, jobject obj, jint prog) {
 	glUniformMatrix4fv(glGetUniformLocation(prog, "m_model"), 1, GL_FALSE,
 			g_model_loc * g_model_ges);
 
-	glUniform1i(glGetUniformLocation(prog, "u_use_light"), GL_TRUE);
+	glUniform1i(glGetUniformLocation(prog, "u_use_light"), GL_FALSE);
 
 	glUniform3f(glGetUniformLocation(prog, "u_light_position"),
 			light_position[0], light_position[1], light_position[2]);
@@ -157,44 +163,19 @@ Java_com_mumu_glmodel_GLRender_render(JNIEnv* env, jobject obj, jint prog) {
 			light_color[1], light_color[2]);
 	glUniform1f(glGetUniformLocation(prog, "u_Ns"), Ns);
 	glUniform1f(glGetUniformLocation(prog, "u_attenuation"), attenuation);
-	glUniform1i(glGetUniformLocation(prog, "u_use_texture"), GL_TRUE);
+	glUniform1i(glGetUniformLocation(prog, "u_use_texture"), 0);
 
-	glBindVertexArray(vao);
-//	glDrawArrays(GL_TRIANGLES, 0, v_size);
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, h_texture);
-	glUniform1i(glGetUniformLocation(prog, "u_sampler"), 0);
-	glDrawElements(GL_TRIANGLES, 3 * f_size, GL_UNSIGNED_INT, 0);
+	glBindVertexArray(_vao);
+//	glActiveTexture(GL_TEXTURE0 + _texture_unit);
+//	glBindTexture(GL_TEXTURE_2D, _texture);
+//	glUniform1i(glGetUniformLocation(prog, "u_sampler"), _texture_unit);
+	//	glDrawElements(GL_TRIANGLES, 3 * f_size, GL_UNSIGNED_INT, 0);
+	glDrawArrays(GL_TRIANGLES, 0, _size);
 	glBindVertexArray(0);
-	glBindTexture(GL_TEXTURE_2D, 0);
+//	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-JNIEXPORT int Java_com_mumu_glmodel_GLRender_loadBitmapTextrue(JNIEnv* env,
-		jobject thiz, jobjectArray jbitmaps) {
-	jsize size = env->GetArrayLength(jbitmaps);
-	if (size == 0)
-		return -1;
-	AndroidBitmapInfo bitmapInfo;
-	BmpTexture texture;
-	for (int i = 0; i < size; i++) {
-		jobject bmp = env->GetObjectArrayElement(jbitmaps, i);
-		if (AndroidBitmap_getInfo(env, bmp, &bitmapInfo) < 0) {
-			LOGE("AndroidBitmap_getInfo() failed !");
-			return -1;
-		}
-		texture.img_w = bitmapInfo.width;
-		texture.img_h = bitmapInfo.height;
-		if (bitmapInfo.format != ANDROID_BITMAP_FORMAT_RGBA_8888) {
-			LOGE("invalid rgb format");
-			return -1;
-		}
-		if (AndroidBitmap_lockPixels(env, bmp, &texture.img_pixels) < 0) {
-			LOGE("AndroidBitmap_lockPixels failed !");
-		}
-		g_textures.push_back(texture);
-		useTexture(texture);
-		AndroidBitmap_unlockPixels(env, bmp);
-	}
+int loadBitmapTextrue(jobjectArray jbitmaps) {
 	return 0;
 }
 
@@ -207,6 +188,7 @@ int useTexture(BmpTexture texture) {
 			texture.img_pixels == 0 ? "invalid" : "valid", texture.img_w,
 			texture.img_h);
 	glActiveTexture(GL_TEXTURE0);
+	GLuint h_texture;
 	glGenTextures(1, &h_texture);
 	glBindTexture(GL_TEXTURE_2D, h_texture);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -217,14 +199,13 @@ int useTexture(BmpTexture texture) {
 	GL_TEXTURE_2D, 0, GL_RGBA, texture.img_w, texture.img_h, 0,
 	GL_RGBA,
 	GL_UNSIGNED_BYTE, texture.img_pixels);
-//	free(texture.img_pixels);
+	//	free(texture.img_pixels);
 	glBindTexture(GL_TEXTURE_2D, 0);
-	return 0;
+	return h_texture;
 }
 
-JNIEXPORT void JNICALL Java_com_mumu_glmodel_GLRender_rotateModel(JNIEnv *pEnv,
-		jobject obj, jfloat deg_x, jfloat deg_y, jfloat deg_z, jfloat x,
-		jfloat y, jfloat z) {
+void rotateModel(float deg_x, float deg_y, float deg_z, float x, float y,
+		float z) {
 	float _x = x == 0 ? 0 : x / abs(x);
 	float _y = y == 0 ? 0 : y / abs(y);
 	float _z = z == 0 ? 0 : z / abs(z);
@@ -237,14 +218,10 @@ JNIEXPORT void JNICALL Java_com_mumu_glmodel_GLRender_rotateModel(JNIEnv *pEnv,
 	}
 }
 
-JNIEXPORT void JNICALL Java_com_mumu_glmodel_GLRender_clean(JNIEnv *pEnv,
-		jobject obj) {
-	glDeleteBuffers(3, vbo);
-	glDeleteBuffers(1, &ebo);
-	glDeleteVertexArrays(1, &vao);
-	for (int i = 0; i < g_textures.size(); i++) {
-		free(((BmpTexture) g_textures[i]).img_pixels);
-	}
-	g_textures.clear();
-	vector<BmpTexture>(g_textures).swap(g_textures);
+void clean() {
+	//	glDeleteBuffers(3, vbo);
+	//	glDeleteBuffers(1, &ebo);
+	//	glDeleteVertexArrays(1, &vao);
+	//	g_textures.clear();
+	//	vector<BmpTexture>(g_textures).swap(g_textures);
 }

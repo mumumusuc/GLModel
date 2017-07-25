@@ -13,13 +13,9 @@
 using namespace std;
 using namespace vmath;
 
-//纹理
-struct BmpTexture {
-	void* img_pixels;
-	int img_w;
-	int img_h;
-};
 
+#ifndef MATERIAL
+#define MATERIAL
 //材质
 struct Material {
 	std::string::size_type i;
@@ -30,7 +26,10 @@ struct Material {
 	vec3 Ks;
 	int mtl_index;
 };
+#endif
 
+#ifndef MODEL_OBJECT
+#define MODEL_OBJECT
 struct ModelObject {
 	//顶点
 	vector<vec3> v;
@@ -45,17 +44,10 @@ struct ModelObject {
 	//材质索引
 	vector<uvec3> ft;
 };
+#endif
 
-class ModelLoader {
-public:
-	ModelLoader() = default;
-	~ModelLoader() = default;
-public:
-	ModelObject loadObject(const char*);
-	void destroyObject(ModelObject);
-	void loadMaterial(const char*);
-
-private:
-	void buildIndice(ModelObject& obj);
-};
+ModelObject load_coordinates(const char*);
+void destroy(ModelObject&);
+void load_material(const char*);
+void build_model(ModelObject &, float*, float*, float*,bool);
 

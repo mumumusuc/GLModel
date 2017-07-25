@@ -3,7 +3,7 @@
 using namespace std;
 using namespace vmath;
 
-ModelObject ModelLoader::loadObject(const char* obj) {
+ModelObject load_coordinates(const char* obj) {
 
 	ModelObject model;
 	istringstream modelStream(obj);
@@ -21,7 +21,7 @@ ModelObject ModelLoader::loadObject(const char* obj) {
 		value.str(line);
 		value >> start;
 		const char* _str = start.c_str();
-		LOGI("line = %s\n", line.c_str());
+//		LOGI("line = %s\n", line.c_str());
 		//顶点
 		if (strcmp(_str, "v") == 0) {
 			value >> t_v[0] >> t_v[1] >> t_v[2];
@@ -38,7 +38,7 @@ ModelObject ModelLoader::loadObject(const char* obj) {
 		//纹理
 		if (strcmp(_str, "vt") == 0) {
 			value >> t_vt[0] >> t_vt[1];
-			LOGI("vt = %f,%f\n", t_vt[0], t_vt[1]);
+			//	LOGI("vt = %f,%f\n", t_vt[0], t_vt[1]);
 			model.vt.push_back(t_vt);
 		} else
 		//索引
@@ -94,51 +94,48 @@ ModelObject ModelLoader::loadObject(const char* obj) {
 	value.str("");
 	start.clear();
 	line.clear();
-	buildIndice(model);
 	return model;
 }
 
-void ModelLoader::buildIndice(ModelObject& obj) {
-	int size = 0, i;
-	int v_size = obj.v.size();
+void build_model(ModelObject& obj, float* c_v, float* c_t, float* c_n,
+		bool clear) {
+	int size, i, j;
+	//重建顶点
+	if ((size = obj.fv.size())) {
+		for (i = 0; i < size; i++) {
+			for (j = 0; j < 3; j++) {
+				c_v[3 * 3 * i + j * 3 + 0] = obj.v[obj.fv[i][j]][0];
+				c_v[3 * 3 * i + j * 3 + 1] = obj.v[obj.fv[i][j]][1];
+				c_v[3 * 3 * i + j * 3 + 2] = obj.v[obj.fv[i][j]][2];
+			}
+		}
+	}
+	//重建法线
 	if ((size = obj.fn.size())) {
-		vector<vec3> t_vn(v_size);
 		for (i = 0; i < size; i++) {
-//			 vec3 nor = normalize(obj.vn[obj.fn[i][0]] + obj.vn[obj.fn[i][1]] + obj.vn[obj.fn[i][2]]);
-//			 t_vn.push_back(nor);
-//			 t_vn.push_back(nor);
-//			 t_vn.push_back(nor);
-			t_vn[obj.fv[i][0]] = obj.vn[obj.fn[i][0]];
-			t_vn[obj.fv[i][1]] = obj.vn[obj.fn[i][1]];
-			t_vn[obj.fv[i][2]] = obj.vn[obj.fn[i][2]];
+			for (j = 0; j < 3; j++) {
+				c_t[3 * 3 * i + j * 3 + 0] = obj.vn[obj.fn[i][j]][0];
+				c_t[3 * 3 * i + j * 3 + 1] = obj.vn[obj.fn[i][j]][1];
+				c_t[3 * 3 * i + j * 3 + 2] = obj.vn[obj.fn[i][j]][2];
+			}
 		}
-		obj.vn.clear();
-		vector<vec3>(obj.vn).swap(obj.vn);
-		obj.vn = vector<vec3>(t_vn);
-		t_vn.clear();
-		vector<vec3>(t_vn).swap(t_vn);
 	}
-
+	//重建纹理
 	if ((size = obj.ft.size())) {
-		vector<vec2> t_vt(v_size);
 		for (i = 0; i < size; i++) {
-//			t_vt.push_back((vec2) obj.vt[obj.ft[i][0]]);
-//			t_vt.push_back((vec2) obj.vt[obj.ft[i][1]]);
-//			t_vt.push_back((vec2) obj.vt[obj.ft[i][2]]);
-			t_vt[obj.fv[i][0]] = obj.vt[obj.ft[i][0]];
-			t_vt[obj.fv[i][1]] = obj.vt[obj.ft[i][1]];
-			t_vt[obj.fv[i][2]] = obj.vt[obj.ft[i][2]];
+			for (j = 0; j < 2; j++) {
+				c_n[3 * 3 * i + j * 2 + 0] = obj.vt[obj.ft[i][j]][0];
+				c_n[3 * 3 * i + j * 2 + 1] = obj.vt[obj.ft[i][j]][1];
+			}
 		}
-		obj.vt.clear();
-		vector<vec2>(obj.vt).swap(obj.vt);
-		obj.vt = vector<vec2>(t_vt);
-		t_vt.clear();
-		vector<vec2>(t_vt).swap(t_vt);
 	}
-
+	//释放
+	if (clear) {
+		destroy(obj);
+	}
 }
 
-void ModelLoader::destroyObject(ModelObject obj) {
+void destroy(ModelObject& obj) {
 	obj.fn.clear();
 	vector<uvec3>(obj.fn).swap(obj.fn);
 	obj.ft.clear();

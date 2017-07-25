@@ -1,8 +1,8 @@
 #version 300 es  
   
 layout(location = 0) in vec4 vPosition;  
-layout(location = 1) in vec3 vNormal; 
-layout(location = 2) in vec2 vTexture; 
+layout(location = 1) in vec2 vTexture; 
+layout(location = 2) in vec3 vNormal; 
 
 uniform mat4 m_proj;
 uniform mat4 m_model;
