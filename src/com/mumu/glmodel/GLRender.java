@@ -76,7 +76,15 @@ public class GLRender implements GLSurfaceView.Renderer {
 			Log.e(TAG, " error on create glprogram > " + mProgHandler);
 			return;
 		}
-		loadModelMaterial(mModel, null);
+		//loadModelMaterial(mModel, null);
+		long s = System.currentTimeMillis();
+		models = loadModel(mModel,null);
+		Log.d(TAG, "models_size=" + models.length);
+		if (models.length > 0) {
+			Log.d(TAG, models[0].toString());
+		}
+
+		Log.d(TAG, "load done, use " + (System.currentTimeMillis() - s) + " ms");
 		/*
 		 * Bitmap[] textures = new Bitmap[1]; textures[0] =
 		 * resizeBmp(BitmapFactory.decodeResource(mContext.getResources(),

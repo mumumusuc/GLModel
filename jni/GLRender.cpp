@@ -96,7 +96,6 @@ GLuint loadShader(GLenum type, const char *shaderSrc) {
 
 void bindBuffers(GLfloat* vertex, uint v_size, GLfloat* texture, uint t_size,
 		GLfloat* normals, uint n_size, GLuint* result) {
-	LOGI("vertex->size=%d,value=%f,%f,%f",v_size,vertex[0],vertex[1],vertex[2]);
 	GLuint vao;
 	glGenVertexArrays(1, &vao);
 	glBindVertexArray(vao);
@@ -133,16 +132,15 @@ void bindBuffers(GLfloat* vertex, uint v_size, GLfloat* texture, uint t_size,
 
 void render(GLuint prog, GLuint _vao, uint _size, GLuint _texture,
 		GLuint _texture_unit) {
-	LOGI("render -> %d,%d,%d,%d,%d", prog, _vao, _size, _texture, _texture_unit);
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 	glEnable(GL_DEPTH_TEST);
 	glClear(GL_DEPTH_BUFFER_BIT);
 	glDepthFunc(GL_LEQUAL);
 	glEnable(GL_TEXTURE_2D);
-//	glEnable(GL_CULL_FACE);
-//	glCullFace(GL_BACK);
-//	glFrontFace(GL_CCW);
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
+	glFrontFace(GL_CCW);
 
 	glUseProgram(prog);
 
@@ -151,7 +149,7 @@ void render(GLuint prog, GLuint _vao, uint _size, GLuint _texture,
 	glUniformMatrix4fv(glGetUniformLocation(prog, "m_model"), 1, GL_FALSE,
 			g_model_loc * g_model_ges);
 
-	glUniform1i(glGetUniformLocation(prog, "u_use_light"), GL_FALSE);
+	glUniform1i(glGetUniformLocation(prog, "u_use_light"), GL_TRUE);
 
 	glUniform3f(glGetUniformLocation(prog, "u_light_position"),
 			light_position[0], light_position[1], light_position[2]);

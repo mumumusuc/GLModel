@@ -47,7 +47,7 @@ struct ModelObject {
 #endif
 
 ModelObject load_coordinates(const char*);
-void destroy(ModelObject&);
+void destroy_cache(ModelObject&);
 void load_material(const char*);
 void build_model(ModelObject &, float*, float*, float*,bool);
 

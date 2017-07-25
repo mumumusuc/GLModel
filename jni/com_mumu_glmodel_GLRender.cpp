@@ -60,7 +60,7 @@ JNIEXPORT jobjectArray JNICALL Java_com_mumu_glmodel_GLRender_loadModel(
 			"I");
 	if (_f_mVertexSize == 0)
 		LOGE("error on get mVertexSize");
-	env->SetIntField(_o_instance, _f_mVertexSize, v_size / 3);
+	env->SetIntField(_o_instance, _f_mVertexSize, v_size/3 );
 
 	jfieldID _f_H_texture = env->GetFieldID(_c_ModelStruct, "_H_texture", "I");
 	if (_f_H_texture == 0)

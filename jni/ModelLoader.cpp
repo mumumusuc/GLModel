@@ -48,7 +48,7 @@ ModelObject load_coordinates(const char* obj) {
 				t_fv[0]--;
 				t_fv[1]--;
 				t_fv[2]--;
-				//LOGI("fv = %d,%d,%d\n", t_fv[0], t_fv[1], t_fv[2]);
+				//	LOGI("fv = %d,%d,%d\n", t_fv[0], t_fv[1], t_fv[2]);
 				model.fv.push_back(t_fv);
 			} else {
 				value >> temp[0] >> temp[1] >> temp[2];
@@ -77,7 +77,7 @@ ModelObject load_coordinates(const char* obj) {
 				}
 				if (push_fv) {
 					model.fv.push_back(t_fv);
-					//	LOGI("push fv = %d,%d,%d\n", t_fv[0],t_fv[1],t_fv[2]);
+					//		LOGI("push fv = %d,%d,%d\n", t_fv[0], t_fv[1], t_fv[2]);
 				}
 				if (push_ft) {
 					model.ft.push_back(t_ft);
@@ -104,9 +104,9 @@ void build_model(ModelObject& obj, float* c_v, float* c_t, float* c_n,
 	if ((size = obj.fv.size())) {
 		for (i = 0; i < size; i++) {
 			for (j = 0; j < 3; j++) {
-				c_v[3 * 3 * i + j * 3 + 0] = obj.v[obj.fv[i][j]][0];
-				c_v[3 * 3 * i + j * 3 + 1] = obj.v[obj.fv[i][j]][1];
-				c_v[3 * 3 * i + j * 3 + 2] = obj.v[obj.fv[i][j]][2];
+				c_v[9 * i + 3 * j + 0] = obj.v[obj.fv[i][j]][0];
+				c_v[9 * i + 3 * j + 1] = obj.v[obj.fv[i][j]][1];
+				c_v[9 * i + 3 * j + 2] = obj.v[obj.fv[i][j]][2];
 			}
 		}
 	}
@@ -114,28 +114,28 @@ void build_model(ModelObject& obj, float* c_v, float* c_t, float* c_n,
 	if ((size = obj.fn.size())) {
 		for (i = 0; i < size; i++) {
 			for (j = 0; j < 3; j++) {
-				c_t[3 * 3 * i + j * 3 + 0] = obj.vn[obj.fn[i][j]][0];
-				c_t[3 * 3 * i + j * 3 + 1] = obj.vn[obj.fn[i][j]][1];
-				c_t[3 * 3 * i + j * 3 + 2] = obj.vn[obj.fn[i][j]][2];
+				c_n[9 * i + 3 * j + 0] = obj.vn[obj.fn[i][j]][0];
+				c_n[9 * i + 3 * j + 1] = obj.vn[obj.fn[i][j]][1];
+				c_n[9 * i + 3 * j + 2] = obj.vn[obj.fn[i][j]][2];
 			}
 		}
 	}
 	//重建纹理
 	if ((size = obj.ft.size())) {
 		for (i = 0; i < size; i++) {
-			for (j = 0; j < 2; j++) {
-				c_n[3 * 3 * i + j * 2 + 0] = obj.vt[obj.ft[i][j]][0];
-				c_n[3 * 3 * i + j * 2 + 1] = obj.vt[obj.ft[i][j]][1];
+			for (j = 0; j < 3; j++) {
+				c_t[6 * i + 2 * j + 0] = obj.vt[obj.ft[i][j]][0];
+				c_t[6 * i + 2 * j + 1] = obj.vt[obj.ft[i][j]][1];
 			}
 		}
 	}
 	//释放
 	if (clear) {
-		destroy(obj);
+		destroy_cache(obj);
 	}
 }
 
-void destroy(ModelObject& obj) {
+void destroy_cache(ModelObject& obj) {
 	obj.fn.clear();
 	vector<uvec3>(obj.fn).swap(obj.fn);
 	obj.ft.clear();
