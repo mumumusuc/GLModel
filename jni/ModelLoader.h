@@ -1,3 +1,6 @@
+#ifndef _H_MODEL_LOADER_
+#define _H_MODEL_LOADER_
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <vector>
@@ -10,44 +13,53 @@
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, TAG, __VA_ARGS__)
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, TAG, __VA_ARGS__)
 
+#define BUILD_VERTEX 0
+#define BUILD_TEXTURE 1
+#define BUILD_NORMAL 2
+
 using namespace std;
 using namespace vmath;
-
 
 #ifndef MATERIAL
 #define MATERIAL
 //材质
 struct Material {
-	std::string::size_type i;
-	unsigned int code;
+	char* newmtl;
 	float Ns;
 	vec3 Ka;
 	vec3 Kd;
 	vec3 Ks;
-	int mtl_index;
+	vec3 Ke;
+	float Ni;
+	char* name;
 };
 #endif
 
 #ifndef MODEL_OBJECT
 #define MODEL_OBJECT
 struct ModelObject {
+	char* usemtl;
 	//顶点
-	vector<vec3> v;
-	//顶点索引
-	vector<uvec3> fv;
+	float* v;
 	//法向量
-	vector<vec3> vn;
-	//法向量索引
-	vector<uvec3> fn;
+	float* vn;
 	//材质
-	vector<vec2> vt;
-	//材质索引
-	vector<uvec3> ft;
+	float* vt;
+};
+struct FaceCache {
+	char* usemtl;
+	vector<uvec3>* fv;
+	vector<uvec3>* ft;
+	vector<uvec3>* fn;
 };
 #endif
 
-ModelObject load_coordinates(const char*);
-void destroy_cache(ModelObject&);
-void load_material(const char*);
-void build_model(ModelObject &, float*, float*, float*,bool);
+vector<ModelObject>* load_coordinates(const char*);
+vector<Material>* load_mtls(const char*);
+float* build_vertex(vector<vec3>*, FaceCache*);
+float* build_texture(vector<vec2>*, FaceCache*);
+float* build_normal(vector<vec3>*, FaceCache*);
+void destroy_cache(ModelObject&, Material&);
+void build_model(ModelObject &, int, float**);
 
+#endif

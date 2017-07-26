@@ -19,13 +19,13 @@ using namespace vmath;
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
 #define ERROR -1
 
+//纹理
 #ifndef BMP_TEXTURE
 #define BMP_TEXTURE
-//纹理
 struct BmpTexture {
-	void* img_pixels;
-	int img_w;
-	int img_h;
+	void* pixels;
+	int w;
+	int h;
 };
 #endif
 
@@ -33,9 +33,9 @@ int createProgram(const char*, const char*);
 GLuint loadShader(GLenum, const char*);
 void resizeWindow(uint, uint);
 void bindBuffers(GLfloat*, uint, GLfloat*, uint, GLfloat*, uint, GLuint*);
+GLuint bindTexture(void*, uint, uint, GLuint);
 void render(GLuint, uint, GLuint, GLuint, GLuint);
 void rotateModel(float, float, float, float, float, float);
-int useTexture(BmpTexture);
 int initShader(GLint, const char*, const char*);
 void clean();
 

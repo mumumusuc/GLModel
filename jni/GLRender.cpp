@@ -15,7 +15,7 @@ mat4 g_camera = lookat(v_camera_loc, v_model_loc, vec3(0.0f, 1.0f, 0.0f));
 
 GLfloat ambient[4] = { 1.0, 1.0, 1.0, 0.3 };
 GLfloat light_color[3] = { 0.8, 0.8, 0.8 };
-GLfloat light_position[3] = { 0.0f, 0.0f, 400.0f };
+GLfloat light_position[3] = { 0.0f, 0.0f, 4000.0f };
 GLfloat eye_position[3] = { 0.0, 10.0, 30.0 };
 GLfloat sky_color[3] = { 0.7, 0.7, 1.0 };
 GLfloat ground_color[3] = { 0.2, 0.2, 0.2 };
@@ -53,7 +53,7 @@ void resizeWindow(uint width, uint height) {
 	g_width = width;
 	g_height = height;
 	float aspect = (float) g_height / g_width;
-	g_proj = frustum(-2.0f, 2.0f, -2.0f * aspect, 2.0f * aspect, 10.0f,
+	g_proj = frustum(-2.0f, 2.0f, -2.0f * aspect, 2.0f * aspect, 10.f,
 			8000.0f);
 	glViewport(0, 0, g_width, g_height);
 }
@@ -99,35 +99,42 @@ void bindBuffers(GLfloat* vertex, uint v_size, GLfloat* texture, uint t_size,
 	GLuint vao;
 	glGenVertexArrays(1, &vao);
 	glBindVertexArray(vao);
-	GLuint vbo[3];
-	glGenBuffers(3, vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
-	glBufferData(
-	GL_ARRAY_BUFFER, v_size * sizeof(GLfloat), vertex,
-	GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (GLubyte *) 0);
-	glEnableVertexAttribArray(0);
-
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
-	glBufferData(
-	GL_ARRAY_BUFFER, t_size * sizeof(GLfloat), texture,
-	GL_STATIC_DRAW);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (GLubyte *) 0);
-	glEnableVertexAttribArray(1);
-
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[2]);
-	glBufferData(
-	GL_ARRAY_BUFFER, n_size * sizeof(GLfloat), normals,
-	GL_STATIC_DRAW);
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (GLubyte *) 0);
-	glEnableVertexAttribArray(2);
-
+	GLuint vbo_v;
+	if (v_size) {
+		glGenBuffers(1, &vbo_v);
+		glBindBuffer(GL_ARRAY_BUFFER, vbo_v);
+		glBufferData(
+		GL_ARRAY_BUFFER, v_size * sizeof(GLfloat), vertex,
+		GL_STATIC_DRAW);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (GLubyte *) 0);
+		glEnableVertexAttribArray(0);
+	}
+	GLuint vbo_t;
+	if (t_size) {
+		glGenBuffers(1, &vbo_t);
+		glBindBuffer(GL_ARRAY_BUFFER, vbo_t);
+		glBufferData(
+		GL_ARRAY_BUFFER, t_size * sizeof(GLfloat), texture,
+		GL_STATIC_DRAW);
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (GLubyte *) 0);
+		glEnableVertexAttribArray(1);
+	}
+	GLuint vbo_n;
+	if (n_size) {
+		glGenBuffers(1, &vbo_n);
+		glBindBuffer(GL_ARRAY_BUFFER, vbo_n);
+		glBufferData(
+		GL_ARRAY_BUFFER, n_size * sizeof(GLfloat), normals,
+		GL_STATIC_DRAW);
+		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (GLubyte *) 0);
+		glEnableVertexAttribArray(2);
+	}
 	glBindVertexArray(0);
-	LOGI("result = [%d,%d,%d,%d]", vao, vbo[0], vbo[1], vbo[2]);
+	LOGI("bindBuffers -> result = [%d,%d,%d,%d]", vao, vbo_v, vbo_t, vbo_n);
 	result[0] = vao;
-	result[1] = vbo[0];
-	result[2] = vbo[1];
-	result[3] = vbo[2];
+	result[1] = vbo_v;
+	result[2] = vbo_t;
+	result[3] = vbo_n;
 }
 
 void render(GLuint prog, GLuint _vao, uint _size, GLuint _texture,
@@ -161,45 +168,41 @@ void render(GLuint prog, GLuint _vao, uint _size, GLuint _texture,
 			light_color[1], light_color[2]);
 	glUniform1f(glGetUniformLocation(prog, "u_Ns"), Ns);
 	glUniform1f(glGetUniformLocation(prog, "u_attenuation"), attenuation);
-	glUniform1i(glGetUniformLocation(prog, "u_use_texture"), 0);
+	glUniform1i(glGetUniformLocation(prog, "u_use_texture"), _texture > 0);
 
 	glBindVertexArray(_vao);
-//	glActiveTexture(GL_TEXTURE0 + _texture_unit);
-//	glBindTexture(GL_TEXTURE_2D, _texture);
-//	glUniform1i(glGetUniformLocation(prog, "u_sampler"), _texture_unit);
+	glActiveTexture(GL_TEXTURE0 + _texture_unit);
+	glBindTexture(GL_TEXTURE_2D, _texture);
+	glUniform1i(glGetUniformLocation(prog, "u_sampler"), _texture_unit);
 	//	glDrawElements(GL_TRIANGLES, 3 * f_size, GL_UNSIGNED_INT, 0);
 	glDrawArrays(GL_TRIANGLES, 0, _size);
 	glBindVertexArray(0);
-//	glBindTexture(GL_TEXTURE_2D, 0);
+	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 int loadBitmapTextrue(jobjectArray jbitmaps) {
 	return 0;
 }
 
-int useTexture(BmpTexture texture) {
-	if (texture.img_pixels == 0) {
+GLuint bindTexture(void* pixels, uint w, uint h, GLuint _unit) {
+	if (pixels == 0) {
 		LOGE("load texture failed! invalid image");
 		return ERROR;
 	}
-	LOGI("img_config: data=%s , width=%d , height=%d",
-			texture.img_pixels == 0 ? "invalid" : "valid", texture.img_w,
-			texture.img_h);
-	glActiveTexture(GL_TEXTURE0);
-	GLuint h_texture;
-	glGenTextures(1, &h_texture);
-	glBindTexture(GL_TEXTURE_2D, h_texture);
+	glActiveTexture(GL_TEXTURE0 + _unit);
+	GLuint _texture;
+	glGenTextures(1, &_texture);
+	glBindTexture(GL_TEXTURE_2D, _texture);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	glTexImage2D(
-	GL_TEXTURE_2D, 0, GL_RGBA, texture.img_w, texture.img_h, 0,
+	GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0,
 	GL_RGBA,
-	GL_UNSIGNED_BYTE, texture.img_pixels);
-	//	free(texture.img_pixels);
+	GL_UNSIGNED_BYTE, pixels);
 	glBindTexture(GL_TEXTURE_2D, 0);
-	return h_texture;
+	return _texture;
 }
 
 void rotateModel(float deg_x, float deg_y, float deg_z, float x, float y,

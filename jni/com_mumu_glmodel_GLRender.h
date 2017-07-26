@@ -33,6 +33,13 @@ JNIEXPORT jobjectArray JNICALL Java_com_mumu_glmodel_GLRender_loadModel(
 
 /*
  * Class:     com_mumu_glmodel_GLRender
+ * Method:    genRenderParams
+ */
+JNIEXPORT void JNICALL Java_com_mumu_glmodel_GLRender_genRenderParams(JNIEnv *,
+		jobject, jobject);
+
+/*
+ * Class:     com_mumu_glmodel_GLRender
  * Method:    render
  * Signature: (I)V
  */
@@ -45,7 +52,7 @@ JNIEXPORT void JNICALL Java_com_mumu_glmodel_GLRender_render(JNIEnv *, jobject,
  * Signature: ([Landroid/graphics/Bitmap;)I
  */
 JNIEXPORT jint JNICALL Java_com_mumu_glmodel_GLRender_loadBitmapTextrue(
-		JNIEnv *, jobject, jobjectArray);
+		JNIEnv *, jobject, jobject, jint);
 
 /*
  * Class:     com_mumu_glmodel_GLRender

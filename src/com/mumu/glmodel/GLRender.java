@@ -12,6 +12,9 @@ import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.opengl.GLSurfaceView;
 import android.os.AsyncTask;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -24,7 +27,7 @@ public class GLRender implements GLSurfaceView.Renderer {
 	private final String MODEL_FILE = "model/cube.obj";
 	private final String MTL_FILE = null;
 
-	private int mProgHandler;
+	private int mProgHandler = -1;
 	ModelStruct[] models;
 	private Context mContext;
 	private String mVertexShader, mFragmentShader, mModel;
@@ -40,6 +43,7 @@ public class GLRender implements GLSurfaceView.Renderer {
 		mModel = readAssert(mAssetMgr, MODEL_FILE);
 		Log.i(TAG, "mVertexShader -> " + mVertexShader);
 		Log.i(TAG, "mFragmentShader -> " + mFragmentShader);
+	//	loadModelMaterial(mModel, null);
 	}
 
 	private String readAssert(AssetManager as, String file) {
@@ -70,28 +74,26 @@ public class GLRender implements GLSurfaceView.Renderer {
 
 	@Override
 	public void onSurfaceCreated(GL10 gl, EGLConfig config) {
-		mProgHandler = createProgram(mVertexShader, mFragmentShader);
-		Log.i(TAG, "glprogram = " + mProgHandler);
-		if (mProgHandler < 0) {
-			Log.e(TAG, " error on create glprogram > " + mProgHandler);
+		Log.i(TAG, "onSurfaceCreated -> glprogram = " + mProgHandler);
+		if (mProgHandler <= 0) {
+			mProgHandler = createProgram(mVertexShader, mFragmentShader);
+		}
+		if (mProgHandler <= 0) {
+			Log.e(TAG, "onSurfaceCreated -> create program failed");
 			return;
 		}
-		//loadModelMaterial(mModel, null);
-		long s = System.currentTimeMillis();
-		models = loadModel(mModel,null);
-		Log.d(TAG, "models_size=" + models.length);
-		if (models.length > 0) {
-			Log.d(TAG, models[0].toString());
+		models = loadModel(mModel, null);
+		if (models != null) {
+		//	genRenderParams(models[0]);
+			// Bitmap textures =
+			// resizeBmp(BitmapFactory.decodeResource(mContext.getResources(),
+			// R.mipmap.tex));
+			// models[0].mTextureUnit = 0;
+			// models[0]._H_texture = loadBitmapTextrue(textures,
+			// models[0].mTextureUnit);
+			// textures.recycle();
+			Log.i(TAG, models[0].toString());
 		}
-
-		Log.d(TAG, "load done, use " + (System.currentTimeMillis() - s) + " ms");
-		/*
-		 * Bitmap[] textures = new Bitmap[1]; textures[0] =
-		 * resizeBmp(BitmapFactory.decodeResource(mContext.getResources(),
-		 * R.mipmap.tex)); loadBitmapTextrue(textures); for (int i = 0; i <
-		 * textures.length; i++) { if (textures[i] != null)
-		 * textures[i].recycle(); }
-		 */
 	}
 
 	private Bitmap resizeBmp(Bitmap bitmap) {
@@ -112,12 +114,17 @@ public class GLRender implements GLSurfaceView.Renderer {
 
 	@Override
 	public void onDrawFrame(GL10 gl) {
-		if (models != null)
-			render(mProgHandler, models[0]);
+		// long s = System.currentTimeMillis();
+		if (models != null) {
+			Log.d(TAG, "onDrawFrame");
+		//	render(mProgHandler, models[0]);
+		}
+		// long d = System.currentTimeMillis() - s;
+		// Log.i(TAG, "fps = " + (1000 / (d == 0 ? 0.001 : d)));
 	}
 
 	private void render(int prog, ModelStruct model) {
-		render(prog, model._H_VAO, model.mVertexSize, model._H_texture, model.mTextureUnit);
+		render(prog, model._H_VAO, model.mVertexSize / 3, model._H_texture, model.mTextureUnit);
 	}
 
 	public void loadModelMaterial(String model, String mtl) {
@@ -130,12 +137,11 @@ public class GLRender implements GLSurfaceView.Renderer {
 
 	private final native ModelStruct[] loadModel(String model, String mtl);
 
-	/* [vao, _size, _texture, _texture_unit, vbo(v),vbo(t),vbo(n)] */
-	private final native int[] genRenderArgs(ModelStruct model);
+	private final native void genRenderParams(ModelStruct model);
 
 	private final native void render(int prog, int _vao, int _size, int _texture, int _texture_unit);
 
-	private final native int loadBitmapTextrue(Bitmap[] textures);
+	private final native int loadBitmapTextrue(Bitmap src, int unit);
 
 	public final native void rotateModel(float dx, float dy, float dz, float x, float y, float z);
 
@@ -161,7 +167,6 @@ public class GLRender implements GLSurfaceView.Renderer {
 			if (models.length > 0) {
 				Log.d(TAG, models[0].toString());
 			}
-
 			return "load done, use " + (System.currentTimeMillis() - s) + " ms";
 		}
 
@@ -169,8 +174,22 @@ public class GLRender implements GLSurfaceView.Renderer {
 		protected void onPostExecute(String result) {
 			super.onPostExecute(result);
 			// Toast.makeText(mContext, result, Toast.LENGTH_LONG).show();
-			Log.i(TAG, result);
+			Log.i(TAG, "onPostExecute ->" + result);
+			mHandler.sendEmptyMessage(0);
 		}
 	}
 
+	private final Handler mHandler = new Handler(Looper.getMainLooper()) {
+		@Override
+		public void handleMessage(Message msg) {
+			if (models != null) {
+				Log.i(TAG, "handler -> mProgHandler = " + mProgHandler);
+				if (mProgHandler > 0) {
+					Log.i(TAG, "handler -> genRenderParams");
+					genRenderParams(models[0]);
+					Log.i(TAG, models[0].toString());
+				}
+			}
+		}
+	};
 }
