@@ -2,7 +2,6 @@
 
 using namespace std;
 using namespace vmath;
-
 vector<ModelObject>* load_coordinates(const char* obj) {
 	if (!obj) {
 		LOGE("load_coordinates -> bad input args");
@@ -18,6 +17,9 @@ vector<ModelObject>* load_coordinates(const char* obj) {
 
 	vector<FaceCache>* faces = new vector<FaceCache>();
 	FaceCache* t_face = new FaceCache();
+	t_face->fv = new vector<uvec3>();
+	t_face->ft = new vector<uvec3>();
+	t_face->fn = new vector<uvec3>();
 
 	vec3 t_v, t_vn;
 	vec2 t_vt;
@@ -50,6 +52,9 @@ vector<ModelObject>* load_coordinates(const char* obj) {
 		} else
 		//材质
 		if (strcmp(_str, "usemtl") == 0) {
+			if (t_face->usemtl != NULL) {
+				faces->push_back(*t_face);
+			}
 			value >> t_face->usemtl;
 			LOGI("usemtl %s", t_face->usemtl);
 		} else
@@ -89,9 +94,10 @@ vector<ModelObject>* load_coordinates(const char* obj) {
 					}
 				}
 				if (push_fv) {
-					if(t_face->fv != NULL){
-					t_face->fv->push_back(t_fv);
-					LOGI("push fv = %d,%d,%d\n", t_fv[0], t_fv[1], t_fv[2]);}else{
+					if (t_face->fv != NULL) {
+						t_face->fv->push_back(t_fv);
+						LOGI("push fv = %d,%d,%d\n", t_fv[0], t_fv[1], t_fv[2]);
+					} else {
 						LOGE("push fv = NULL");
 					}
 				}
@@ -106,6 +112,7 @@ vector<ModelObject>* load_coordinates(const char* obj) {
 			}
 		}
 	}
+	faces->push_back(*t_face);
 	modelStream.str("");
 	value.str("");
 	start.clear();
@@ -115,28 +122,46 @@ vector<ModelObject>* load_coordinates(const char* obj) {
 	vector<ModelObject>* models = new vector<ModelObject>();
 	ModelObject* model = new ModelObject();
 	for (int i = 0, size = faces->size(); i < size; i++) {
-		model->usemtl = (*faces)[i].usemtl;
+		FaceCache face = (*faces)[i];
+		model->usemtl = face.usemtl;
 		LOGI("model[%d].usemtl = %s", i, model->usemtl);
-		model->v = build_vertex(v, &(*faces)[i]);
-		LOGI("model[%d].v = %d", i, model->v);
-		model->vt = build_texture(vt, &(*faces)[i]);
-		LOGI("model[%d].vt = %d", i, model->vt);
-		model->vn = build_normal(vn, &(*faces)[i]);
-		LOGI("model[%d].vn = %d", i, model->vn);
+		build_vertex(v, &face, model);
+		face.fv->clear();
+		vector<uvec3>(*face.fv).swap(*face.fv);
+		delete face.fv;
+		face.fv = NULL;
+		build_texture(vt, &face, model);
+		face.ft->clear();
+		vector<uvec3>(*face.ft).swap(*face.ft);
+		delete face.ft;
+		face.ft = NULL;
+		build_normal(vn, &face, model);
+		face.fn->clear();
+		vector<uvec3>(*face.fn).swap(*face.fn);
+		delete face.fn;
+		face.fn = NULL;
+		models->push_back(*model);
 	}
 	LOGE("load_coordinates -> build indice end");
 	delete model;
 	model = NULL;
+	v->clear();
+	vector<vec3>(*v).swap(*v);
 	delete v;
 	v = NULL;
+	vt->clear();
+	vector<vec2>(*vt).swap(*vt);
 	delete vt;
 	vt = NULL;
+	vn->clear();
+	vector<vec3>(*vn).swap(*vn);
 	delete vn;
 	vn = NULL;
 	delete faces;
 	faces = NULL;
 	delete t_face;
 	t_face = NULL;
+	LOGI("load_coordinates -> get %d objects", models->size());
 	return models;
 }
 
@@ -184,52 +209,71 @@ vector<Material>* load_mtls(const char* mtl) {
 	return v_material;
 }
 
-float* build_vertex(vector<vec3>* points, FaceCache* face) {
+void build_vertex(vector<vec3>* points, FaceCache* face, ModelObject* obj) {
+	if (obj->v != NULL) {
+		LOGE("build_vertex -> release v first");
+		delete obj->v;
+		obj->v = NULL;
+	}
 	float* p = NULL;
 	int size = face->fv->size();
 	if (size) {
 		p = (float*) malloc(size * 3 * 3 * sizeof(float));
-		LOGI("build_vertex -> load_vertex_p = %d", p);
 		for (int i = 0; i < size; i++) {
 			for (int j = 0; j < 3; j++) {
-				p[9 * i + 3 * j + 0] = (*points)[*(face->fv)[i][j]][0];
-				p[9 * i + 3 * j + 1] = (*points)[*(face->fv)[i][j]][1];
-				p[9 * i + 3 * j + 2] = (*points)[*(face->fv)[i][j]][2];
+				LOGI("build_vertex -> [%d]", (*(face->fv))[i][j]);
+				p[9 * i + 3 * j + 0] = (*points)[(*(face->fv))[i][j]][0];
+				p[9 * i + 3 * j + 1] = (*points)[(*(face->fv))[i][j]][1];
+				p[9 * i + 3 * j + 2] = (*points)[(*(face->fv))[i][j]][2];
 			}
 		}
 	}
-	return p;
+	LOGI("build_vertex -> load_vertex end");
+	obj->v_size = size * 9;
+	obj->v = p;
 }
 
-float* build_texture(vector<vec2>* points, FaceCache* face) {
+void build_texture(vector<vec2>* points, FaceCache* face, ModelObject* obj) {
+	if (obj->vt != NULL) {
+		LOGE("build_texture -> release vt first");
+		delete obj->vt;
+		obj->vt = NULL;
+	}
 	float* p = NULL;
 	int size = face->ft->size();
 	if (size) {
 		p = (float*) malloc(size * 3 * 2 * sizeof(float));
-		LOGI("build_texture -> load_texture_p = %d", p);
 		for (int i = 0; i < size; i++) {
 			for (int j = 0; j < 3; j++) {
-				p[6 * i + 2 * j + 0] = (*points)[*(face->ft)[i][j]][0];
-				p[6 * i + 2 * j + 1] = (*points)[*(face->ft)[i][j]][1];
+				LOGI("build_texture -> [%d]", (*(face->ft))[i][j]);
+				p[6 * i + 2 * j + 0] = (*points)[(*(face->ft))[i][j]][0];
+				p[6 * i + 2 * j + 1] = (*points)[(*(face->ft))[i][j]][1];
 			}
 		}
 	}
-	return p;
+	obj->t_size = size * 6;
+	obj->vt = p;
 }
-float* build_normal(vector<vec3>* points, FaceCache* face) {
+void build_normal(vector<vec3>* points, FaceCache* face, ModelObject* obj) {
+	if (obj->vn != NULL) {
+		LOGE("build_normal -> release vn first");
+		delete obj->vn;
+		obj->vn = NULL;
+	}
 	float* p = NULL;
-	int size = face->fv->size();
+	int size = face->fn->size();
 	if (size) {
 		p = (float*) malloc(size * 3 * 3 * sizeof(float));
-		LOGI("build_normal -> load_normal_p = %d", p);
 		for (int i = 0; i < size; i++) {
 			for (int j = 0; j < 3; j++) {
-				p[9 * i + 3 * j + 0] = (*points)[*(face->fn)[i][j]][0];
-				p[9 * i + 3 * j + 1] = (*points)[*(face->fn)[i][j]][1];
-				p[9 * i + 3 * j + 2] = (*points)[*(face->fn)[i][j]][2];
+				LOGI("build_normal -> [%d]", (*(face->fn))[i][j]);
+				p[9 * i + 3 * j + 0] = (*points)[(*(face->fn))[i][j]][0];
+				p[9 * i + 3 * j + 1] = (*points)[(*(face->fn))[i][j]][1];
+				p[9 * i + 3 * j + 2] = (*points)[(*(face->fn))[i][j]][2];
 			}
 		}
 	}
-	return p;
+	obj->n_size = size * 9;
+	obj->vn = p;
 }
 

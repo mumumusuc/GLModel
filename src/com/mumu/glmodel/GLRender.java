@@ -24,7 +24,7 @@ public class GLRender implements GLSurfaceView.Renderer {
 
 	private final String VERTEX_SHADER_FILE = "shader/vert.glsl";
 	private final String FRAGMENT_SHADER_FILE = "shader/frag.glsl";
-	private final String MODEL_FILE = "model/cube.obj";
+	private final String MODEL_FILE = "model/ball.obj";
 	private final String MTL_FILE = null;
 
 	private int mProgHandler = -1;
@@ -43,7 +43,7 @@ public class GLRender implements GLSurfaceView.Renderer {
 		mModel = readAssert(mAssetMgr, MODEL_FILE);
 		Log.i(TAG, "mVertexShader -> " + mVertexShader);
 		Log.i(TAG, "mFragmentShader -> " + mFragmentShader);
-	//	loadModelMaterial(mModel, null);
+		loadModelMaterial(mModel, null);
 	}
 
 	private String readAssert(AssetManager as, String file) {
@@ -82,17 +82,19 @@ public class GLRender implements GLSurfaceView.Renderer {
 			Log.e(TAG, "onSurfaceCreated -> create program failed");
 			return;
 		}
-		models = loadModel(mModel, null);
+		//models = loadModel(mModel, null);
 		if (models != null) {
-		//	genRenderParams(models[0]);
-			// Bitmap textures =
-			// resizeBmp(BitmapFactory.decodeResource(mContext.getResources(),
-			// R.mipmap.tex));
-			// models[0].mTextureUnit = 0;
-			// models[0]._H_texture = loadBitmapTextrue(textures,
-			// models[0].mTextureUnit);
-			// textures.recycle();
-			Log.i(TAG, models[0].toString());
+			for (int i = 0; i < models.length; i++) {
+				genRenderParams(models[i]);
+				// Bitmap textures =
+				// resizeBmp(BitmapFactory.decodeResource(mContext.getResources(),
+				// R.mipmap.tex));
+				// models[0].mTextureUnit = 0;
+				// models[0]._H_texture = loadBitmapTextrue(textures,
+				// models[0].mTextureUnit);
+				// textures.recycle();
+				Log.i(TAG, models[i].toString());
+			}
 		}
 	}
 
@@ -116,8 +118,9 @@ public class GLRender implements GLSurfaceView.Renderer {
 	public void onDrawFrame(GL10 gl) {
 		// long s = System.currentTimeMillis();
 		if (models != null) {
-			Log.d(TAG, "onDrawFrame");
-		//	render(mProgHandler, models[0]);
+			for (int i = 0; i < models.length; i++) {
+				render(mProgHandler, models[i]);
+			}
 		}
 		// long d = System.currentTimeMillis() - s;
 		// Log.i(TAG, "fps = " + (1000 / (d == 0 ? 0.001 : d)));

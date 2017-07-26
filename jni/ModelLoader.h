@@ -41,10 +41,13 @@ struct ModelObject {
 	char* usemtl;
 	//顶点
 	float* v;
+	uint v_size;
 	//法向量
 	float* vn;
+	uint n_size;
 	//材质
 	float* vt;
+	uint t_size;
 };
 struct FaceCache {
 	char* usemtl;
@@ -56,10 +59,9 @@ struct FaceCache {
 
 vector<ModelObject>* load_coordinates(const char*);
 vector<Material>* load_mtls(const char*);
-float* build_vertex(vector<vec3>*, FaceCache*);
-float* build_texture(vector<vec2>*, FaceCache*);
-float* build_normal(vector<vec3>*, FaceCache*);
-void destroy_cache(ModelObject&, Material&);
+void build_vertex(vector<vec3>*, FaceCache*,ModelObject*);
+void build_texture(vector<vec2>*, FaceCache*,ModelObject*);
+void build_normal(vector<vec3>*, FaceCache*,ModelObject*);
 void build_model(ModelObject &, int, float**);
 
 #endif

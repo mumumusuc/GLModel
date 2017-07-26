@@ -22,7 +22,7 @@ JNIEXPORT jobjectArray JNICALL Java_com_mumu_glmodel_GLRender_loadModel(
 	if (!model) {
 		LOGE("loadModel -> bad input args");
 		return NULL;
-	}/*
+	}
 	jclass _c_ModelStruct = env->FindClass("com/mumu/glmodel/ModelStruct");
 	if (_c_ModelStruct == 0)
 		LOGE("error on find class");
@@ -31,15 +31,13 @@ JNIEXPORT jobjectArray JNICALL Java_com_mumu_glmodel_GLRender_loadModel(
 		LOGE("error on get constructor");
 	jobject _o_instance = env->NewObject(_c_ModelStruct, _m_init);
 	if (_o_instance == 0)
-		LOGE("error on new instance");*/
+		LOGE("error on new instance");
 	//解析文本
 	const char* _model = env->GetStringUTFChars(model, 0);
 	LOGE("loadModel -> parse coordinates now");
 	vector<ModelObject>* objects = load_coordinates(_model);
 	LOGE("loadModel -> parse coordinates end");
 	env->ReleaseStringUTFChars(model, _model);
-	delete objects;
-	objects = NULL;
 	vector<Material>* materials = NULL;
 	if (mtl) {
 		const char* _mtl = env->GetStringUTFChars(mtl, 0);
@@ -47,72 +45,85 @@ JNIEXPORT jobjectArray JNICALL Java_com_mumu_glmodel_GLRender_loadModel(
 		materials = load_mtls(_mtl);
 		LOGE("loadModel -> parse material end");
 		env->ReleaseStringUTFChars(mtl, _mtl);
-		delete materials;
-			materials = NULL;
-	}/*
-	//重建索引
-	const uint v_size = object.fv.size() * 3 * 3;
-	const uint t_size = object.ft.size() * 3 * 2;
-	const uint n_size = object.fn.size() * 3 * 3;
-	LOGI("loadModel -> size = [%d,%d,%d]", v_size, t_size, n_size);
-	//返回绑定结果
-	//顶点
-	if (p) {
-		jfieldID _f_mVertexSize = env->GetFieldID(_c_ModelStruct, "mVertexSize",
-				"I");
-		if (_f_mVertexSize == 0)
-			LOGE("error on get mVertexSize");
-		env->SetIntField(_o_instance, _f_mVertexSize, v_size);
-		jfieldID _f_mVertexCoBuffer = env->GetFieldID(_c_ModelStruct,
-				"mVertexCoBuffer", "[F");
-		if (_f_mVertexCoBuffer == 0)
-			LOGE("error on get mVertexCoBuffer");
-		jfloatArray _vertex_buffer = env->NewFloatArray(v_size);
-		env->SetFloatArrayRegion(_vertex_buffer, 0, v_size, p);
-		env->SetObjectField(_o_instance, _f_mVertexCoBuffer, _vertex_buffer);
-		env->DeleteLocalRef(_vertex_buffer);
 	}
-	//纹理
-	if (p) {
-		jfieldID _f_mTextureSize = env->GetFieldID(_c_ModelStruct,
-				"mTextureSize", "I");
-		if (_f_mTextureSize == 0)
-			LOGE("error on get mTextureSize");
-		env->SetIntField(_o_instance, _f_mTextureSize, t_size);
-		jfieldID _f_mTextureCoBuffer = env->GetFieldID(_c_ModelStruct,
-				"mTextureCoBuffer", "[F");
-		if (_f_mTextureCoBuffer == 0)
-			LOGE("error on get mTextureCoBuffer");
-		jfloatArray _texture_buffer = env->NewFloatArray(t_size);
-		env->SetFloatArrayRegion(_texture_buffer, 0, t_size, p);
-		env->SetObjectField(_o_instance, _f_mTextureCoBuffer, _texture_buffer);
-		env->DeleteLocalRef(_texture_buffer);
+	const int size = objects->size();
+	LOGE("loadModel -> get %d objects", size);
+	if (!size) {
+		return NULL;
 	}
-	//法线
-	if (p) {
-		jfieldID _f_mNormalSize = env->GetFieldID(_c_ModelStruct, "mNormalSize",
-				"I");
-		if (_f_mNormalSize == 0)
-			LOGE("error on get mNormalSize");
-		env->SetIntField(_o_instance, _f_mNormalSize, n_size);
-		jfieldID _f_mNormalCoBuffer = env->GetFieldID(_c_ModelStruct,
-				"mNormalCoBuffer", "[F");
-		if (_f_mNormalCoBuffer == 0)
-			LOGE("error on get mNormalCoBuffer");
-		jfloatArray _normal_buffer = env->NewFloatArray(n_size);
-		env->SetFloatArrayRegion(_normal_buffer, 0, n_size, p);
-		env->SetObjectField(_o_instance, _f_mNormalCoBuffer, _normal_buffer);
-		env->DeleteLocalRef(_normal_buffer);
+	jobjectArray _result = env->NewObjectArray(size, _c_ModelStruct, NULL);
+	for (int i = 0; i < size; i++) {
+		ModelObject object = (*objects)[i];
+		//重建索引
+		const uint v_size = object.v_size;
+		const uint t_size = object.t_size;
+		const uint n_size = object.n_size;
+		LOGI("loadModel -> size = [%d,%d,%d]", v_size, t_size, n_size);
+		//返回绑定结果
+		//顶点
+		if (v_size) {
+			jfieldID _f_mVertexSize = env->GetFieldID(_c_ModelStruct,
+					"mVertexSize", "I");
+			if (_f_mVertexSize == 0)
+				LOGE("error on get mVertexSize");
+			env->SetIntField(_o_instance, _f_mVertexSize, v_size);
+			jfieldID _f_mVertexCoBuffer = env->GetFieldID(_c_ModelStruct,
+					"mVertexCoBuffer", "[F");
+			if (_f_mVertexCoBuffer == 0)
+				LOGE("error on get mVertexCoBuffer");
+			jfloatArray _vertex_buffer = env->NewFloatArray(v_size);
+			env->SetFloatArrayRegion(_vertex_buffer, 0, v_size, object.v);
+			env->SetObjectField(_o_instance, _f_mVertexCoBuffer,
+					_vertex_buffer);
+			env->DeleteLocalRef(_vertex_buffer);
+			delete object.v;
+			object.v = NULL;
+			LOGI("loadModel -> for v freedom !!!");
+		}
+		//纹理
+		if (t_size) {
+			jfieldID _f_mTextureSize = env->GetFieldID(_c_ModelStruct,
+					"mTextureSize", "I");
+			if (_f_mTextureSize == 0)
+				LOGE("error on get mTextureSize");
+			env->SetIntField(_o_instance, _f_mTextureSize, t_size);
+			jfieldID _f_mTextureCoBuffer = env->GetFieldID(_c_ModelStruct,
+					"mTextureCoBuffer", "[F");
+			if (_f_mTextureCoBuffer == 0)
+				LOGE("error on get mTextureCoBuffer");
+			jfloatArray _texture_buffer = env->NewFloatArray(t_size);
+			env->SetFloatArrayRegion(_texture_buffer, 0, t_size, object.vt);
+			env->SetObjectField(_o_instance, _f_mTextureCoBuffer,
+					_texture_buffer);
+			env->DeleteLocalRef(_texture_buffer);
+			delete object.vt;
+			object.vt = NULL;
+			LOGI("loadModel -> for vt freedom !!!");
+		}
+		//法线
+		if (n_size) {
+			jfieldID _f_mNormalSize = env->GetFieldID(_c_ModelStruct,
+					"mNormalSize", "I");
+			if (_f_mNormalSize == 0)
+				LOGE("error on get mNormalSize");
+			env->SetIntField(_o_instance, _f_mNormalSize, n_size);
+			jfieldID _f_mNormalCoBuffer = env->GetFieldID(_c_ModelStruct,
+					"mNormalCoBuffer", "[F");
+			if (_f_mNormalCoBuffer == 0)
+				LOGE("error on get mNormalCoBuffer");
+			jfloatArray _normal_buffer = env->NewFloatArray(n_size);
+			env->SetFloatArrayRegion(_normal_buffer, 0, n_size, object.vn);
+			env->SetObjectField(_o_instance, _f_mNormalCoBuffer,
+					_normal_buffer);
+			env->DeleteLocalRef(_normal_buffer);
+			delete object.vn;
+			object.vn = NULL;
+			LOGI("loadModel -> for vn freedom !!!");
+		}
+		env->SetObjectArrayElement(_result, i, _o_instance);
 	}
-	if (p != NULL) {
-		free(p);
-		p = NULL;
-		LOGI("loadModel -> for freedom !!!");
-	}
-	jobjectArray _result = env->NewObjectArray(1, _c_ModelStruct, _o_instance);
 	env->DeleteLocalRef(_o_instance);
-	destroy_cache(object);*/
-	return NULL;
+	return _result;
 }
 
 JNIEXPORT void JNICALL Java_com_mumu_glmodel_GLRender_genRenderParams(
