@@ -24,44 +24,43 @@ using namespace vmath;
 #define MATERIAL
 //材质
 struct Material {
-	char* newmtl;
+	string newmtl;
 	float Ns;
 	vec3 Ka;
 	vec3 Kd;
 	vec3 Ks;
 	vec3 Ke;
 	float Ni;
-	char* name;
+	string name;
 };
 #endif
 
 #ifndef MODEL_OBJECT
 #define MODEL_OBJECT
 struct ModelObject {
-	char* usemtl;
+	string usemtl;
 	//顶点
-	float* v;
+	float* v = NULL;
 	uint v_size;
 	//法向量
-	float* vn;
+	float* vn = NULL;
 	uint n_size;
 	//材质
-	float* vt;
+	float* vt = NULL;
 	uint t_size;
 };
 struct FaceCache {
-	char* usemtl;
-	vector<uvec3>* fv;
-	vector<uvec3>* ft;
-	vector<uvec3>* fn;
+	string usemtl;
+	vector<uvec3> fv;
+	vector<uvec3> ft;
+	vector<uvec3> fn;
 };
 #endif
 
-vector<ModelObject>* load_coordinates(const char*);
-vector<Material>* load_mtls(const char*);
-void build_vertex(vector<vec3>*, FaceCache*,ModelObject*);
-void build_texture(vector<vec2>*, FaceCache*,ModelObject*);
-void build_normal(vector<vec3>*, FaceCache*,ModelObject*);
-void build_model(ModelObject &, int, float**);
+int load_coordinates(const char*,vector<ModelObject>&);
+int load_mtls(const char*,vector<Material>&);
+void build_vertex(vector<vec3>, FaceCache,ModelObject&);
+void build_texture(vector<vec2>, FaceCache,ModelObject&);
+void build_normal(vector<vec3>, FaceCache,ModelObject&);
 
 #endif

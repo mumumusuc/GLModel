@@ -34,7 +34,8 @@ GLuint loadShader(GLenum, const char*);
 void resizeWindow(uint, uint);
 void bindBuffers(GLfloat*, uint, GLfloat*, uint, GLfloat*, uint, GLuint*);
 GLuint bindTexture(void*, uint, uint, GLuint);
-void render(GLuint, uint, GLuint, GLuint, GLuint);
+void render(GLuint, GLuint, uint, GLuint, GLuint, GLfloat, GLfloat, GLfloat,
+		GLfloat, GLfloat, GLfloat, GLfloat, GLfloat, GLfloat, GLfloat, GLfloat);
 void rotateModel(float, float, float, float, float, float);
 int initShader(GLint, const char*, const char*);
 void clean();

@@ -9,18 +9,27 @@ mat4 g_proj;
 vec3 v_camera_loc(0.0f, 0.0f, 50.0f);
 mat4 g_camera = lookat(v_camera_loc, v_model_loc, vec3(0.0f, 1.0f, 0.0f));
 
-//GLuint vbo[3], vao, h_texture;
-//uint v_size;
-//std::vector<BmpTexture> g_textures;
+/*
+ uniform vec3 u_light_position;	//光源位置
+ uniform vec3 u_eye_position;	//相机位置
+ uniform vec4 u_ambient;			//环境光颜色
+ uniform vec3 u_light_color;		//光源颜色
+ uniform float u_Ns;						//反射指数
+ uniform vec3 u_Ka;						//环境光反射系数
+ uniform vec3 u_Kd;						//漫反射系数
+ uniform vec3 u_Ks;						//镜面反射系数
+ uniform float u_Ni;						//透光率
+ */
 
-GLfloat ambient[4] = { 1.0, 1.0, 1.0, 0.3 };
-GLfloat light_color[3] = { 0.8, 0.8, 0.8 };
 GLfloat light_position[3] = { 0.0f, 0.0f, 4000.0f };
-GLfloat eye_position[3] = { 0.0, 10.0, 30.0 };
-GLfloat sky_color[3] = { 0.7, 0.7, 1.0 };
-GLfloat ground_color[3] = { 0.2, 0.2, 0.2 };
-GLfloat Ns = 8;
-GLfloat attenuation = 0.1;
+GLfloat eye_position[3] = { 0.0f, 10.0f, 30.0f };
+GLfloat ambient[4] = { 1.0f, 1.0f, 1.0f, 0.3f };
+GLfloat light_color[3] = { 1.0f, 1.0f, 1.0f };
+GLfloat Ns = 96.0f;
+GLfloat Ka[3] = { 1.f, 1.f, 1.f };
+GLfloat Kd[3] = { 0.8f, 0.8f, 0.8f };
+GLfloat Ks[3] = { 0.05f, 0.05f, 0.05f };
+GLfloat Ni = 1.f;
 
 int createProgram(const char* vert, const char* frag) {
 	GLint progHandler = ERROR;
@@ -53,8 +62,7 @@ void resizeWindow(uint width, uint height) {
 	g_width = width;
 	g_height = height;
 	float aspect = (float) g_height / g_width;
-	g_proj = frustum(-2.0f, 2.0f, -2.0f * aspect, 2.0f * aspect, 10.f,
-			8000.0f);
+	g_proj = frustum(-2.0f, 2.0f, -2.0f * aspect, 2.0f * aspect, 10.f, 8000.0f);
 	glViewport(0, 0, g_width, g_height);
 }
 
@@ -138,46 +146,61 @@ void bindBuffers(GLfloat* vertex, uint v_size, GLfloat* texture, uint t_size,
 }
 
 void render(GLuint prog, GLuint _vao, uint _size, GLuint _texture,
-		GLuint _texture_unit) {
+		GLuint _texture_unit, GLfloat _Ns, GLfloat _Ni, GLfloat _Ka0,
+		GLfloat _Ka1, GLfloat _Ka2, GLfloat _Kd0, GLfloat _Kd1, GLfloat _Kd2,
+		GLfloat _Ks0, GLfloat _Ks1, GLfloat _Ks2) {
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 	glEnable(GL_DEPTH_TEST);
 	glClear(GL_DEPTH_BUFFER_BIT);
 	glDepthFunc(GL_LEQUAL);
 	glEnable(GL_TEXTURE_2D);
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK);
-	glFrontFace(GL_CCW);
+	//glEnable(GL_CULL_FACE);
+	//glCullFace(GL_BACK);
+	//glFrontFace(GL_CCW);
+	//glBlendFunc(GL_SRC_ALPHA, GL_ONE); // 源RGB*源A + 背景RGB*1
+	glEnable(GL_BLEND); // 设置启用
 
 	glUseProgram(prog);
-
 	glUniformMatrix4fv(glGetUniformLocation(prog, "m_proj"), 1, GL_FALSE,
 			g_proj * g_camera);
 	glUniformMatrix4fv(glGetUniformLocation(prog, "m_model"), 1, GL_FALSE,
 			g_model_loc * g_model_ges);
-
 	glUniform1i(glGetUniformLocation(prog, "u_use_light"), GL_TRUE);
-
 	glUniform3f(glGetUniformLocation(prog, "u_light_position"),
 			light_position[0], light_position[1], light_position[2]);
 	glUniform3f(glGetUniformLocation(prog, "u_eye_position"), eye_position[0],
 			eye_position[1], eye_position[2]);
-	glUniform4f(glGetUniformLocation(prog, "u_ambient"), ambient[0], ambient[1],
-			ambient[2], ambient[3]);
+	//glUniform4f(glGetUniformLocation(prog, "u_ambient"), ambient[0], ambient[1],ambient[2], ambient[3]);
 	glUniform3f(glGetUniformLocation(prog, "u_light_color"), light_color[0],
 			light_color[1], light_color[2]);
-	glUniform1f(glGetUniformLocation(prog, "u_Ns"), Ns);
-	glUniform1f(glGetUniformLocation(prog, "u_attenuation"), attenuation);
-	glUniform1i(glGetUniformLocation(prog, "u_use_texture"), _texture > 0);
+	//input
+	if (_Ns > 0) {
+		glUniform1f(glGetUniformLocation(prog, "u_Ns"), _Ns);
+		glUniform1f(glGetUniformLocation(prog, "u_Ni"), _Ni);
+		glUniform3f(glGetUniformLocation(prog, "u_Ka"), _Ka0, _Ka1, _Ka2);
+		glUniform3f(glGetUniformLocation(prog, "u_Kd"), _Kd0, _Kd1, _Kd2);
+		glUniform3f(glGetUniformLocation(prog, "u_Ks"), _Ks0, _Ks1, _Ks2);
+	} else {
+		glUniform1f(glGetUniformLocation(prog, "u_Ns"), Ns);
+		glUniform1f(glGetUniformLocation(prog, "u_Ni"), Ni);
+		glUniform3f(glGetUniformLocation(prog, "u_Ka"), Ka[0], Ka[1], Ka[2]);
+		glUniform3f(glGetUniformLocation(prog, "u_Kd"), Kd[0], Kd[1], Kd[2]);
+		glUniform3f(glGetUniformLocation(prog, "u_Ks"), Ks[0], Ks[1], Ks[2]);
+	}
 
 	glBindVertexArray(_vao);
-	glActiveTexture(GL_TEXTURE0 + _texture_unit);
-	glBindTexture(GL_TEXTURE_2D, _texture);
-	glUniform1i(glGetUniformLocation(prog, "u_sampler"), _texture_unit);
+	if (_texture) {
+		glUniform1i(glGetUniformLocation(prog, "u_use_texture"), GL_TRUE);
+		glActiveTexture(GL_TEXTURE0 + _texture_unit);
+		glBindTexture(GL_TEXTURE_2D, _texture);
+		glUniform1i(glGetUniformLocation(prog, "u_sampler"), _texture_unit);
+	}
 	//	glDrawElements(GL_TRIANGLES, 3 * f_size, GL_UNSIGNED_INT, 0);
 	glDrawArrays(GL_TRIANGLES, 0, _size);
 	glBindVertexArray(0);
 	glBindTexture(GL_TEXTURE_2D, 0);
+	glDisable(GL_BLEND);
 }
 
 int loadBitmapTextrue(jobjectArray jbitmaps) {

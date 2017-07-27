@@ -24,13 +24,13 @@ public class GLRender implements GLSurfaceView.Renderer {
 
 	private final String VERTEX_SHADER_FILE = "shader/vert.glsl";
 	private final String FRAGMENT_SHADER_FILE = "shader/frag.glsl";
-	private final String MODEL_FILE = "model/ball.obj";
-	private final String MTL_FILE = null;
+	private final String MODEL_FILE = "model/toho.obj";
+	private final String MTL_FILE = "model/toho.mtl";
 
 	private int mProgHandler = -1;
 	ModelStruct[] models;
 	private Context mContext;
-	private String mVertexShader, mFragmentShader, mModel;
+	private String mVertexShader, mFragmentShader, mModel, mMtl;
 
 	public GLRender(Context context) {
 		mContext = context;
@@ -40,13 +40,14 @@ public class GLRender implements GLSurfaceView.Renderer {
 		}
 		mVertexShader = readAssert(mAssetMgr, VERTEX_SHADER_FILE);
 		mFragmentShader = readAssert(mAssetMgr, FRAGMENT_SHADER_FILE);
-		mModel = readAssert(mAssetMgr, MODEL_FILE);
+		//mModel = readAssert(mAssetMgr, MODEL_FILE);
+		//mMtl = readAssert(mAssetMgr, MTL_FILE);
 		Log.i(TAG, "mVertexShader -> " + mVertexShader);
 		Log.i(TAG, "mFragmentShader -> " + mFragmentShader);
-		loadModelMaterial(mModel, null);
+		// loadModelMaterial(mModel, mMtl);
 	}
 
-	private String readAssert(AssetManager as, String file) {
+	public String readAssert(AssetManager as, String file) {
 		StringBuilder sb = new StringBuilder();
 		InputStream is = null;
 		byte[] buffer = new byte[1024];
@@ -82,8 +83,13 @@ public class GLRender implements GLSurfaceView.Renderer {
 			Log.e(TAG, "onSurfaceCreated -> create program failed");
 			return;
 		}
-		//models = loadModel(mModel, null);
+		// models = loadModel(mModel, mMtl);
+
+	}
+
+	public void setRenderModel(ModelStruct[] models) {
 		if (models != null) {
+			this.models = models;
 			for (int i = 0; i < models.length; i++) {
 				genRenderParams(models[i]);
 				// Bitmap textures =
@@ -127,22 +133,26 @@ public class GLRender implements GLSurfaceView.Renderer {
 	}
 
 	private void render(int prog, ModelStruct model) {
-		render(prog, model._H_VAO, model.mVertexSize / 3, model._H_texture, model.mTextureUnit);
+		render(prog, model._H_VAO, model.mVertexSize / 3, model._H_texture, model.mTextureUnit, model.Ns, model.Ni,
+				model.Ka[0], model.Ka[1], model.Ka[2], model.Kd[0], model.Kd[1], model.Kd[2], model.Ks[0], model.Ks[1],
+				model.Ks[2]);
 	}
 
 	public void loadModelMaterial(String model, String mtl) {
-		new LoadAsyncTask().execute(model, mtl);
+
 	}
 
 	public final native int createProgram(String vert, String frag);
 
 	public final native void resizeWindow(int width, int height);
 
-	private final native ModelStruct[] loadModel(String model, String mtl);
+	public final native ModelStruct[] loadModel(String model, String mtl);
 
 	private final native void genRenderParams(ModelStruct model);
 
-	private final native void render(int prog, int _vao, int _size, int _texture, int _texture_unit);
+	private final native void render(int prog, int _vao, int _size, int _texture, int _texture_unit, float _Ns,
+			float _Ni, float _Ka0, float _Ka1, float _Ka2, float _Kd0, float _Kd1, float _Kd2, float _Ks0, float _Ks1,
+			float _Ks2);
 
 	private final native int loadBitmapTextrue(Bitmap src, int unit);
 
@@ -153,46 +163,4 @@ public class GLRender implements GLSurfaceView.Renderer {
 	static {
 		System.loadLibrary("GLRender");
 	}
-
-	class LoadAsyncTask extends AsyncTask<String, Integer, String> {
-		@Override
-		protected void onPreExecute() {
-			super.onPreExecute();
-			// Toast.makeText(mContext, "load model", Toast.LENGTH_LONG).show();
-			Log.i(TAG, "load model");
-		}
-
-		@Override
-		protected String doInBackground(String... arg0) {
-			long s = System.currentTimeMillis();
-			models = loadModel(arg0[0], arg0.length > 1 ? arg0[1] : null);
-			Log.d(TAG, "models_size=" + models.length);
-			if (models.length > 0) {
-				Log.d(TAG, models[0].toString());
-			}
-			return "load done, use " + (System.currentTimeMillis() - s) + " ms";
-		}
-
-		@Override
-		protected void onPostExecute(String result) {
-			super.onPostExecute(result);
-			// Toast.makeText(mContext, result, Toast.LENGTH_LONG).show();
-			Log.i(TAG, "onPostExecute ->" + result);
-			mHandler.sendEmptyMessage(0);
-		}
-	}
-
-	private final Handler mHandler = new Handler(Looper.getMainLooper()) {
-		@Override
-		public void handleMessage(Message msg) {
-			if (models != null) {
-				Log.i(TAG, "handler -> mProgHandler = " + mProgHandler);
-				if (mProgHandler > 0) {
-					Log.i(TAG, "handler -> genRenderParams");
-					genRenderParams(models[0]);
-					Log.i(TAG, models[0].toString());
-				}
-			}
-		}
-	};
 }

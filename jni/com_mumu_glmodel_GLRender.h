@@ -44,7 +44,8 @@ JNIEXPORT void JNICALL Java_com_mumu_glmodel_GLRender_genRenderParams(JNIEnv *,
  * Signature: (I)V
  */
 JNIEXPORT void JNICALL Java_com_mumu_glmodel_GLRender_render(JNIEnv *, jobject,
-		jint, jint, jint, jint, jint);
+		jint, jint, jint, jint, jint, jfloat, jfloat, jfloat, jfloat, jfloat,
+		jfloat, jfloat, jfloat, jfloat, jfloat, jfloat);
 
 /*
  * Class:     com_mumu_glmodel_GLRender

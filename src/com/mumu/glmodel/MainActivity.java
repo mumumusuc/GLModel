@@ -1,23 +1,43 @@
 package com.mumu.glmodel;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.pm.ConfigurationInfo;
 import android.graphics.PixelFormat;
 import android.opengl.GLSurfaceView;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.ListView;
+import android.widget.Toast;
 
-public class MainActivity extends Activity implements OnTouchListener {
+public class MainActivity extends Activity implements OnTouchListener, OnItemClickListener {
 
 	private static final String TAG = "GL_Activity";
 	private static final int CONTEXT_CLIENT_VERSION = 3;
 	private GLSurfaceView mGLSurfaceView;
 	private GLRender mRender;
+	private ListAdapter mAdapter;
+	private List<String> mList = new ArrayList<String>() {
+		private static final long serialVersionUID = -8386121303628702522L;
+		{
+			add("ball");
+			add("cube");
+			add("monky");
+			add("splot");
+			add("toho");
+			add("car");
+		}
+	};
 
 	private void initGL() {
 		mGLSurfaceView = new GLSurfaceView(this);
@@ -40,7 +60,12 @@ public class MainActivity extends Activity implements OnTouchListener {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		initGL();
-		setContentView(mGLSurfaceView);
+		setContentView(R.layout.activity_main);
+		ListView mListView = (ListView) findViewById(R.id.model_list);
+		mAdapter = new ListAdapter();
+		mAdapter.setList(mList);
+		mListView.setAdapter(mAdapter);
+		mListView.setOnItemClickListener(this);
 	}
 
 	@Override
@@ -99,7 +124,7 @@ public class MainActivity extends Activity implements OnTouchListener {
 					deg_y = -1f;
 			} else {
 				double t = Math.sqrt((x_1 - x) * (x_1 - x) + (y_1 - y) * (y_1 - y));
-				d_z = 0 ;
+				d_z = 0;
 				if (t - d > 20) {
 					d_z = 1;
 				} else if (t - d < -20) {
@@ -118,7 +143,7 @@ public class MainActivity extends Activity implements OnTouchListener {
 			}
 			break;
 		case MotionEvent.ACTION_UP:
-				d_z = 0;
+			d_z = 0;
 			break;
 		default:
 			return false;
@@ -141,5 +166,46 @@ public class MainActivity extends Activity implements OnTouchListener {
 		ConfigurationInfo info = am.getDeviceConfigurationInfo();
 		Log.i(TAG, "support GL_VERSION = " + info.reqGlEsVersion);
 		return (info.reqGlEsVersion >= 0x30000);
+	}
+
+	@Override
+	public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
+		setContentView(mGLSurfaceView);
+		new LoadAsyncTask().execute(
+				mRender.readAssert(getAssets(), "model/" + mList.get(arg2) + ".obj"), 
+				mRender.readAssert(getAssets(), "model/" + mList.get(arg2) + ".mtl"));
+	}
+
+	class LoadAsyncTask extends AsyncTask<String, Integer, ModelStruct[]> {
+		long s = 0;
+
+		@Override
+		protected void onPreExecute() {
+			super.onPreExecute();
+			Toast.makeText(MainActivity.this, "load model", Toast.LENGTH_LONG).show();
+			Log.i(TAG, "load model");
+		}
+
+		@Override
+		protected ModelStruct[] doInBackground(String... arg0) {
+			s = System.currentTimeMillis();
+			ModelStruct[] models = mRender.loadModel(arg0[0],  arg0[1] );
+			Log.d(TAG, "models_size=" + models.length);
+			return models;
+		}
+
+		@Override
+		protected void onPostExecute(final ModelStruct[] result) {
+			super.onPostExecute(result);
+			Toast.makeText(MainActivity.this, "load done, use " + (System.currentTimeMillis() - s) + " ms",
+					Toast.LENGTH_LONG).show();
+			mGLSurfaceView.queueEvent(new Runnable() {
+				@Override
+				public void run() {
+					mRender.setRenderModel(result);
+					mGLSurfaceView.requestRender();
+				}
+			});
+		}
 	}
 }

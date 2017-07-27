@@ -29,37 +29,38 @@ JNIEXPORT jobjectArray JNICALL Java_com_mumu_glmodel_GLRender_loadModel(
 	jmethodID _m_init = env->GetMethodID(_c_ModelStruct, "<init>", "()V");
 	if (_m_init == 0)
 		LOGE("error on get constructor");
-	jobject _o_instance = env->NewObject(_c_ModelStruct, _m_init);
-	if (_o_instance == 0)
-		LOGE("error on new instance");
 	//解析文本
 	const char* _model = env->GetStringUTFChars(model, 0);
 	LOGE("loadModel -> parse coordinates now");
-	vector<ModelObject>* objects = load_coordinates(_model);
+	vector<ModelObject> objects;
+	int model_size = load_coordinates(_model, objects);
 	LOGE("loadModel -> parse coordinates end");
 	env->ReleaseStringUTFChars(model, _model);
-	vector<Material>* materials = NULL;
+	vector<Material> materials;
+	int mtl_size = 0;
 	if (mtl) {
 		const char* _mtl = env->GetStringUTFChars(mtl, 0);
 		LOGE("loadModel -> parse material now");
-		materials = load_mtls(_mtl);
+		mtl_size = load_mtls(_mtl, materials);
 		LOGE("loadModel -> parse material end");
 		env->ReleaseStringUTFChars(mtl, _mtl);
 	}
-	const int size = objects->size();
-	LOGE("loadModel -> get %d objects", size);
-	if (!size) {
+	LOGE("loadModel -> get [%d,%d] objects", model_size, mtl_size);
+	if (!model_size) {
 		return NULL;
 	}
-	jobjectArray _result = env->NewObjectArray(size, _c_ModelStruct, NULL);
-	for (int i = 0; i < size; i++) {
-		ModelObject object = (*objects)[i];
+	jobjectArray _result = env->NewObjectArray(model_size, _c_ModelStruct,
+	NULL);
+	for (int i = 0; i < model_size; i++) {
+		jobject _o_instance = env->NewObject(_c_ModelStruct, _m_init);
+		if (_o_instance == 0)
+			LOGE("error on new instance");
+		ModelObject object = objects[i];
 		//重建索引
 		const uint v_size = object.v_size;
 		const uint t_size = object.t_size;
 		const uint n_size = object.n_size;
 		LOGI("loadModel -> size = [%d,%d,%d]", v_size, t_size, n_size);
-		//返回绑定结果
 		//顶点
 		if (v_size) {
 			jfieldID _f_mVertexSize = env->GetFieldID(_c_ModelStruct,
@@ -76,7 +77,7 @@ JNIEXPORT jobjectArray JNICALL Java_com_mumu_glmodel_GLRender_loadModel(
 			env->SetObjectField(_o_instance, _f_mVertexCoBuffer,
 					_vertex_buffer);
 			env->DeleteLocalRef(_vertex_buffer);
-			delete object.v;
+			free(object.v);
 			object.v = NULL;
 			LOGI("loadModel -> for v freedom !!!");
 		}
@@ -96,7 +97,7 @@ JNIEXPORT jobjectArray JNICALL Java_com_mumu_glmodel_GLRender_loadModel(
 			env->SetObjectField(_o_instance, _f_mTextureCoBuffer,
 					_texture_buffer);
 			env->DeleteLocalRef(_texture_buffer);
-			delete object.vt;
+			free(object.vt);
 			object.vt = NULL;
 			LOGI("loadModel -> for vt freedom !!!");
 		}
@@ -116,13 +117,72 @@ JNIEXPORT jobjectArray JNICALL Java_com_mumu_glmodel_GLRender_loadModel(
 			env->SetObjectField(_o_instance, _f_mNormalCoBuffer,
 					_normal_buffer);
 			env->DeleteLocalRef(_normal_buffer);
-			delete object.vn;
+			free(object.vn);
 			object.vn = NULL;
 			LOGI("loadModel -> for vn freedom !!!");
 		}
+		if (mtl_size) {
+			jfieldID _f_mUseMtl = env->GetFieldID(_c_ModelStruct, "mUseMtl",
+					"Ljava/lang/String;");
+			if (_f_mUseMtl == 0)
+				LOGE("error on get  mUseMtl");
+			jfieldID _f_Ns = env->GetFieldID(_c_ModelStruct, "Ns", "F");
+			if (_f_Ns == 0)
+				LOGE("error on get  Ns");
+			jfieldID _f_Ka = env->GetFieldID(_c_ModelStruct, "Ka", "[F");
+			if (_f_Ka == 0)
+				LOGE("error on get  Ka");
+			jfieldID _f_Kd = env->GetFieldID(_c_ModelStruct, "Kd", "[F");
+			if (_f_Kd == 0)
+				LOGE("error on get  Kd");
+			jfieldID _f_Ks = env->GetFieldID(_c_ModelStruct, "Ks", "[F");
+			if (_f_Ks == 0)
+				LOGE("error on get  Ks");
+			jfieldID _f_Ke = env->GetFieldID(_c_ModelStruct, "Ke", "[F");
+			if (_f_Ke == 0)
+				LOGE("error on get  Ke");
+			jfieldID _f_Ni = env->GetFieldID(_c_ModelStruct, "Ni", "F");
+			if (_f_Ni == 0)
+				LOGE("error on get  Ni");
+			//材质
+			for (int j = 0; j < mtl_size; j++) {
+				Material material = materials[j];
+				string new_mtl = material.newmtl;
+				if (strcmp(object.usemtl.c_str(), new_mtl.c_str()) == 0) {
+					LOGI("loadModel -> bind mtl_name = %s", new_mtl.c_str());
+					jstring _mUseMtl = env->NewStringUTF(material.name.c_str());
+					env->SetObjectField(_o_instance, _f_mUseMtl, _mUseMtl);
+					env->ReleaseStringUTFChars(_mUseMtl, material.name.c_str());
+					env->DeleteLocalRef(_mUseMtl);
+					env->SetFloatField(_o_instance, _f_Ns, material.Ns);
+					env->SetFloatField(_o_instance, _f_Ni, material.Ni);
+					jfloatArray _Ka = env->NewFloatArray(3);
+					env->SetFloatArrayRegion(_Ka, 0, 3, &material.Ka[0]);
+					env->SetObjectField(_o_instance, _f_Ka, _Ka);
+					//	env->ReleaseFloatArrayElements(_Ka, &material.Ka[0], 0);
+					env->DeleteLocalRef(_Ka);
+					jfloatArray _Kd = env->NewFloatArray(3);
+					env->SetFloatArrayRegion(_Kd, 0, 3, &material.Kd[0]);
+					env->SetObjectField(_o_instance, _f_Kd, _Kd);
+					//	env->ReleaseFloatArrayElements(_Kd, &material.Kd[0], 0);
+					env->DeleteLocalRef(_Kd);
+					jfloatArray _Ks = env->NewFloatArray(3);
+					env->SetFloatArrayRegion(_Ks, 0, 3, &material.Ks[0]);
+					env->SetObjectField(_o_instance, _f_Ks, _Ks);
+					//	env->ReleaseFloatArrayElements(_Ks, &material.Ks[0], 0);
+					env->DeleteLocalRef(_Ks);
+					jfloatArray _Ke = env->NewFloatArray(3);
+					env->SetFloatArrayRegion(_Ke, 0, 3, &material.Ke[0]);
+					env->SetObjectField(_o_instance, _f_Ke, _Ke);
+					//	env->ReleaseFloatArrayElements(_Ke, &material.Ke[0], 0);
+					env->DeleteLocalRef(_Ke);
+				}
+			}
+		}
+		//
 		env->SetObjectArrayElement(_result, i, _o_instance);
+		env->DeleteLocalRef(_o_instance);
 	}
-	env->DeleteLocalRef(_o_instance);
 	return _result;
 }
 
@@ -226,8 +286,11 @@ JNIEXPORT void JNICALL Java_com_mumu_glmodel_GLRender_genRenderParams(
 
 JNIEXPORT void JNICALL Java_com_mumu_glmodel_GLRender_render(JNIEnv *env,
 		jobject obj, jint prog, jint _vao, jint _size, jint _texture,
-		jint _texture_unit) {
-	render(prog, _vao, _size, _texture, _texture_unit);
+		jint _texture_unit, jfloat _Ns, jfloat _Ni, jfloat _Ka0, jfloat _Ka1,
+		jfloat _Ka2, jfloat _Kd0, jfloat _Kd1, jfloat _Kd2, jfloat _Ks0,
+		jfloat _Ks1, jfloat _Ks2) {
+	render(prog, _vao, _size, _texture, _texture_unit, _Ns, _Ni, _Ka0, _Ka1,
+			_Ka2, _Kd0, _Kd1, _Kd2, _Ks0, _Ks1, _Ks2);
 }
 
 JNIEXPORT jint JNICALL Java_com_mumu_glmodel_GLRender_loadBitmapTextrue(
