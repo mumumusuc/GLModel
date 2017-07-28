@@ -1,5 +1,7 @@
 #include "GLRender.h"
 
+using namespace vmath;
+
 jint g_width;
 jint g_height;
 mat4 g_model_ges = rotate(0.0f, 1.0f, 0.0f, 0.0f);
@@ -9,29 +11,16 @@ mat4 g_proj;
 vec3 v_camera_loc(0.0f, 0.0f, 50.0f);
 mat4 g_camera = lookat(v_camera_loc, v_model_loc, vec3(0.0f, 1.0f, 0.0f));
 
-/*
- uniform vec3 u_light_position;	//光源位置
- uniform vec3 u_eye_position;	//相机位置
- uniform vec4 u_ambient;			//环境光颜色
- uniform vec3 u_light_color;		//光源颜色
- uniform float u_Ns;						//反射指数
- uniform vec3 u_Ka;						//环境光反射系数
- uniform vec3 u_Kd;						//漫反射系数
- uniform vec3 u_Ks;						//镜面反射系数
- uniform float u_Ni;						//透光率
- */
+static GLfloat light_position[3] = { 0.0f, 0.0f, 4000.0f };
+static GLfloat eye_position[3] = { 0.0f, 10.0f, 30.0f };
+static GLfloat light_color[3] = { 1.0f, 1.0f, 1.0f };
+static GLfloat Ns = 96.0f;
+static GLfloat Ka[3] = { 1.f, 1.f, 1.f };
+static GLfloat Kd[3] = { 0.8f, 0.8f, 0.8f };
+static GLfloat Ks[3] = { 0.05f, 0.05f, 0.05f };
+static GLfloat Ni = 1.f;
 
-GLfloat light_position[3] = { 0.0f, 0.0f, 4000.0f };
-GLfloat eye_position[3] = { 0.0f, 10.0f, 30.0f };
-GLfloat ambient[4] = { 1.0f, 1.0f, 1.0f, 0.3f };
-GLfloat light_color[3] = { 1.0f, 1.0f, 1.0f };
-GLfloat Ns = 96.0f;
-GLfloat Ka[3] = { 1.f, 1.f, 1.f };
-GLfloat Kd[3] = { 0.8f, 0.8f, 0.8f };
-GLfloat Ks[3] = { 0.05f, 0.05f, 0.05f };
-GLfloat Ni = 1.f;
-
-int createProgram(const char* vert, const char* frag) {
+GLint createProgram(const char* vert, const char* frag) {
 	GLint progHandler = ERROR;
 	GLint linked;
 	progHandler = glCreateProgram();
@@ -66,7 +55,7 @@ void resizeWindow(uint width, uint height) {
 	glViewport(0, 0, g_width, g_height);
 }
 
-int initShader(GLint prog, const char* vertexShader,
+void initShader(GLint prog, const char* vertexShader,
 		const char* fragmentShader) {
 	GLuint h_vertexShader;
 	GLuint h_fragmentShader;
@@ -74,7 +63,6 @@ int initShader(GLint prog, const char* vertexShader,
 	h_fragmentShader = loadShader(GL_FRAGMENT_SHADER, fragmentShader);
 	glAttachShader(prog, h_vertexShader);
 	glAttachShader(prog, h_fragmentShader);
-	return 0;
 }
 
 GLuint loadShader(GLenum type, const char *shaderSrc) {
@@ -145,14 +133,16 @@ void bindBuffers(GLfloat* vertex, uint v_size, GLfloat* texture, uint t_size,
 	result[3] = vbo_n;
 }
 
-void render(GLuint prog, GLuint _vao, uint _size, GLuint _texture,
+void render(GLuint prog, bool _clear, GLuint _vao, uint _size, GLuint _texture,
 		GLuint _texture_unit, GLfloat _Ns, GLfloat _Ni, GLfloat _Ka0,
 		GLfloat _Ka1, GLfloat _Ka2, GLfloat _Kd0, GLfloat _Kd1, GLfloat _Kd2,
 		GLfloat _Ks0, GLfloat _Ks1, GLfloat _Ks2) {
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT);
+	if (_clear) {
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_DEPTH_BUFFER_BIT);
+	}
 	glEnable(GL_DEPTH_TEST);
-	glClear(GL_DEPTH_BUFFER_BIT);
 	glDepthFunc(GL_LEQUAL);
 	glEnable(GL_TEXTURE_2D);
 	//glEnable(GL_CULL_FACE);

@@ -3,6 +3,9 @@ package com.mumu.glmodel;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.mumu.glmodel.model.ModelStruct;
+import com.mumu.glmodel.render.GLRender;
+
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.Context;
@@ -24,6 +27,7 @@ public class MainActivity extends Activity implements OnTouchListener, OnItemCli
 
 	private static final String TAG = "GL_Activity";
 	private static final int CONTEXT_CLIENT_VERSION = 3;
+	private boolean mShowSurface = false;
 	private GLSurfaceView mGLSurfaceView;
 	private GLRender mRender;
 	private ListAdapter mAdapter;
@@ -170,9 +174,9 @@ public class MainActivity extends Activity implements OnTouchListener, OnItemCli
 
 	@Override
 	public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
+		mShowSurface = true;
 		setContentView(mGLSurfaceView);
-		new LoadAsyncTask().execute(
-				mRender.readAssert(getAssets(), "model/" + mList.get(arg2) + ".obj"), 
+		new LoadAsyncTask().execute(mRender.readAssert(getAssets(), "model/" + mList.get(arg2) + ".obj"),
 				mRender.readAssert(getAssets(), "model/" + mList.get(arg2) + ".mtl"));
 	}
 
@@ -182,14 +186,14 @@ public class MainActivity extends Activity implements OnTouchListener, OnItemCli
 		@Override
 		protected void onPreExecute() {
 			super.onPreExecute();
-			Toast.makeText(MainActivity.this, "load model", Toast.LENGTH_LONG).show();
+			Toast.makeText(MainActivity.this, "load model", Toast.LENGTH_SHORT).show();
 			Log.i(TAG, "load model");
 		}
 
 		@Override
 		protected ModelStruct[] doInBackground(String... arg0) {
 			s = System.currentTimeMillis();
-			ModelStruct[] models = mRender.loadModel(arg0[0],  arg0[1] );
+			ModelStruct[] models = mRender.loadModel(arg0[0], arg0[1]);
 			Log.d(TAG, "models_size=" + models.length);
 			return models;
 		}
@@ -198,7 +202,7 @@ public class MainActivity extends Activity implements OnTouchListener, OnItemCli
 		protected void onPostExecute(final ModelStruct[] result) {
 			super.onPostExecute(result);
 			Toast.makeText(MainActivity.this, "load done, use " + (System.currentTimeMillis() - s) + " ms",
-					Toast.LENGTH_LONG).show();
+					Toast.LENGTH_SHORT).show();
 			mGLSurfaceView.queueEvent(new Runnable() {
 				@Override
 				public void run() {
@@ -206,6 +210,16 @@ public class MainActivity extends Activity implements OnTouchListener, OnItemCli
 					mGLSurfaceView.requestRender();
 				}
 			});
+		}
+	}
+
+	@Override
+	public void onBackPressed() {
+		if (mShowSurface) {
+			mShowSurface = false;
+			setContentView(R.layout.activity_main);
+		} else {
+			super.onBackPressed();
 		}
 	}
 }

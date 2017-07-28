@@ -51,9 +51,9 @@ struct ModelObject {
 };
 struct FaceCache {
 	string usemtl;
-	vector<uvec3> fv;
-	vector<uvec3> ft;
-	vector<uvec3> fn;
+	vector<ivec3> fv;
+	vector<ivec3> ft;
+	vector<ivec3> fn;
 };
 #endif
 
