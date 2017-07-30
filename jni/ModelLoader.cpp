@@ -1,4 +1,4 @@
-#include "ModelLoader.h"
+#include "include/ModelLoader.h"
 
 using namespace std;
 using namespace vmath;
@@ -175,8 +175,6 @@ int load_mtls(const char* mtl, vector<Material>& v_material) {
 			value >> t_material.Kd[0] >> t_material.Kd[1] >> t_material.Kd[2];
 		} else if (strcmp(_str, "Ks") == 0) {
 			value >> t_material.Ks[0] >> t_material.Ks[1] >> t_material.Ks[2];
-		} else if (strcmp(_str, "Ke") == 0) {
-			value >> t_material.Ke[0] >> t_material.Ke[1] >> t_material.Ke[2];
 		} else if (strcmp(_str, "Ni") == 0) {
 			value >> t_material.Ni;
 		} else if (strcmp(_str, "map_Kd") == 0) {

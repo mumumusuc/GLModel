@@ -1,11 +1,14 @@
 package com.mumu.glmodel;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-
+import java.util.Map;
+import com.mumu.glmodel.model.ModelCoordinate;
+import com.mumu.glmodel.model.ModelLoader;
+import com.mumu.glmodel.model.ModelMtl;
 import com.mumu.glmodel.model.ModelStruct;
 import com.mumu.glmodel.render.GLRender;
-
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.Context;
@@ -15,20 +18,18 @@ import android.opengl.GLSurfaceView;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.MotionEvent;
 import android.view.View;
-import android.view.View.OnTouchListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
 import android.widget.Toast;
 
-public class MainActivity extends Activity implements OnTouchListener, OnItemClickListener {
+public class MainActivity extends Activity implements OnItemClickListener {
 
 	private static final String TAG = "GL_Activity";
 	private static final int CONTEXT_CLIENT_VERSION = 3;
-	private boolean mShowSurface = false;
 	private GLSurfaceView mGLSurfaceView;
+	private ListView mListView;
 	private GLRender mRender;
 	private ListAdapter mAdapter;
 	private List<String> mList = new ArrayList<String>() {
@@ -42,34 +43,35 @@ public class MainActivity extends Activity implements OnTouchListener, OnItemCli
 			add("car");
 		}
 	};
+	private Map<Integer, ModelStruct[]> mModelsMap;
 
 	private void initGL() {
-		mGLSurfaceView = new GLSurfaceView(this);
-		if (detectOpenGLES30()) {
-			mGLSurfaceView.setEGLContextClientVersion(CONTEXT_CLIENT_VERSION);
-			mGLSurfaceView.setEGLConfigChooser(8, 8, 8, 8, 16, 0);
-			mRender = new GLRender(this);
-			mGLSurfaceView.setRenderer(mRender);
-			mGLSurfaceView.getHolder().setFormat(PixelFormat.TRANSPARENT);
-			mGLSurfaceView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
-			mGLSurfaceView.setZOrderOnTop(true);
-			mGLSurfaceView.setOnTouchListener(this);
-		} else {
-			Log.e(TAG, "OpenGL ES 3.0 not supported on device.  Exiting...");
-			finish();
-		}
+		mGLSurfaceView = (GLSurfaceView) findViewById(R.id.surface_view);
+		mGLSurfaceView.setEGLContextClientVersion(CONTEXT_CLIENT_VERSION);
+		mGLSurfaceView.setEGLConfigChooser(8, 8, 8, 8, 16, 0);
+		mRender = new GLRender(this);
+		mGLSurfaceView.setRenderer(mRender);
+		mGLSurfaceView.getHolder().setFormat(PixelFormat.TRANSPARENT);
+	//	mGLSurfaceView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+		mGLSurfaceView.setZOrderOnTop(true);
 	}
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		initGL();
+		if (detectOpenGLES30()) {
+		} else {
+			Log.e(TAG, "OpenGL ES 3.0 not supported on device.  Exiting...");
+			finish();
+		}
 		setContentView(R.layout.activity_main);
-		ListView mListView = (ListView) findViewById(R.id.model_list);
+		initGL();
+		mListView = (ListView) findViewById(R.id.model_list);
 		mAdapter = new ListAdapter();
 		mAdapter.setList(mList);
 		mListView.setAdapter(mAdapter);
 		mListView.setOnItemClickListener(this);
+		mModelsMap = new HashMap<Integer, ModelStruct[]>();
 	}
 
 	@Override
@@ -86,82 +88,8 @@ public class MainActivity extends Activity implements OnTouchListener, OnItemCli
 
 	@Override
 	public void onDestroy() {
-		mGLSurfaceView.destroyDrawingCache();
-		mGLSurfaceView.queueEvent(new Runnable() {
-			@Override
-			public void run() {
-				mRender.clean();
-			}
-		});
 		super.onDestroy();
-	}
-
-	private float deg_x = 0, deg_y = 0, d_z = 0;
-	private float x = 0, y = 0, x_1 = 0, y_1 = 0;
-	private double d = 0;
-
-	@Override
-	public boolean onTouch(View arg0, MotionEvent event) {
-		switch (event.getAction() & MotionEvent.ACTION_MASK) {
-		case MotionEvent.ACTION_DOWN:
-			deg_x = 0;
-			deg_y = 0;
-			d_z = 0;
-			d = 0;
-			x = event.getX();
-			y = event.getY();
-			break;
-		case MotionEvent.ACTION_POINTER_DOWN:
-			x_1 = event.getX(1);
-			y_1 = event.getY(1);
-			break;
-		case MotionEvent.ACTION_MOVE:
-			int cnt = event.getPointerCount();
-			if (cnt == 1) {
-				if (event.getX() - x > 30)
-					deg_x = 1f;
-				else if (event.getX() - x < -30)
-					deg_x = -1f;
-				if (event.getY() - y > 30)
-					deg_y = 1f;
-				else if (event.getY() - y < -30)
-					deg_y = -1f;
-			} else {
-				double t = Math.sqrt((x_1 - x) * (x_1 - x) + (y_1 - y) * (y_1 - y));
-				d_z = 0;
-				if (t - d > 20) {
-					d_z = 1;
-				} else if (t - d < -20) {
-					d_z = -1;
-				}
-				d = t;
-				x_1 = event.getX(1);
-				y_1 = event.getY(1);
-			}
-			x = event.getX();
-			y = event.getY();
-			break;
-		case MotionEvent.ACTION_POINTER_UP:
-			if (event.getPointerCount() <= 1) {
-				d_z = 0;
-			}
-			break;
-		case MotionEvent.ACTION_UP:
-			d_z = 0;
-			break;
-		default:
-			return false;
-		}
-
-		mGLSurfaceView.queueEvent(new Runnable() {
-			@Override
-			public void run() {
-				mRender.rotateModel(deg_y, deg_x, d_z, 1, 1, 0);
-				mGLSurfaceView.requestRender();
-			}
-		});
-
-		return true;
+		// mGLSurfaceView.destroyDrawingCache();
 	}
 
 	/********************/
@@ -174,28 +102,57 @@ public class MainActivity extends Activity implements OnTouchListener, OnItemCli
 
 	@Override
 	public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
-		mShowSurface = true;
-		setContentView(mGLSurfaceView);
-		new LoadAsyncTask().execute(mRender.readAssert(getAssets(), "model/" + mList.get(arg2) + ".obj"),
-				mRender.readAssert(getAssets(), "model/" + mList.get(arg2) + ".mtl"));
+		mGLSurfaceView.setVisibility(View.VISIBLE);
+		mListView.setVisibility(View.INVISIBLE);
+		new LoadAsyncTask().execute(arg2);
 	}
 
-	class LoadAsyncTask extends AsyncTask<String, Integer, ModelStruct[]> {
+	class LoadAsyncTask extends AsyncTask<Integer, Integer, ModelStruct[]> {
 		long s = 0;
 
 		@Override
-		protected void onPreExecute() {
-			super.onPreExecute();
-			Toast.makeText(MainActivity.this, "load model", Toast.LENGTH_SHORT).show();
-			Log.i(TAG, "load model");
-		}
-
-		@Override
-		protected ModelStruct[] doInBackground(String... arg0) {
+		protected ModelStruct[] doInBackground(Integer... arg) {
 			s = System.currentTimeMillis();
-			ModelStruct[] models = mRender.loadModel(arg0[0], arg0[1]);
-			Log.d(TAG, "models_size=" + models.length);
-			return models;
+			ModelStruct[] mModels = null;
+			if (mModelsMap.containsKey(arg[0])) {
+				mModels = mModelsMap.get(arg[0]);
+			} else {
+				String co = ModelLoader.readAssert(getAssets(), "model/" + mList.get(arg[0]) + ".obj");
+				String mtl = ModelLoader.readAssert(getAssets(), "model/" + mList.get(arg[0]) + ".mtl");
+				ModelCoordinate[] cos = ModelLoader.parseModelCoordinate(co);
+				Log.d(TAG, "load coordinate use" + (System.currentTimeMillis() - s) + "ms");
+				if (cos != null) {
+					Log.d(TAG, "cooridinates_size=" + cos.length);
+					for (int i = 0; i < cos.length; i++) {
+						Log.d(TAG, "cooridinate[" + i + "] = " + cos[i].toString());
+					}
+				}
+				long t = System.currentTimeMillis();
+				ModelMtl[] mtls = ModelLoader.parseModelMtl(mtl);
+				Log.d(TAG, "load mtl use" + (System.currentTimeMillis() - t) + "ms");
+				if (mtls != null) {
+					Log.d(TAG, "mtls_size=" + mtls.length);
+					for (int i = 0; i < mtls.length; i++) {
+						String name = mtls[i].mTextureName.split("\\\\\\\\")[1].split("\\.")[0];
+						mtls[i].mTexture = ModelLoader.loadBmp(getResources(), ModelLoader.getMipmapId(name));
+						Log.d(TAG, "mtl[" + i + "] = " + mtls[i].toString());
+					}
+				}
+				mModels = new ModelStruct[cos.length];
+				for (int i = 0; i < cos.length; i++) {
+					mModels[i] = new ModelStruct(cos[i], null);
+					if (mtls != null) {
+						String useMtl = cos[i].mUseMtl;
+						for (int j = 0; j < mtls.length; j++) {
+							if (useMtl.equals(mtls[j].mNewMtl)) {
+								mModels[i].mMtl = mtls[j];
+							}
+						}
+					}
+				}
+				mModelsMap.put(arg[0], mModels);
+			}
+			return mModels;
 		}
 
 		@Override
@@ -203,21 +160,22 @@ public class MainActivity extends Activity implements OnTouchListener, OnItemCli
 			super.onPostExecute(result);
 			Toast.makeText(MainActivity.this, "load done, use " + (System.currentTimeMillis() - s) + " ms",
 					Toast.LENGTH_SHORT).show();
-			mGLSurfaceView.queueEvent(new Runnable() {
-				@Override
-				public void run() {
-					mRender.setRenderModel(result);
-					mGLSurfaceView.requestRender();
-				}
-			});
+			if (result != null)
+				mGLSurfaceView.queueEvent(new Runnable() {
+					@Override
+					public void run() {
+						mRender.setRenderModel(result);
+						mGLSurfaceView.requestRender();
+					}
+				});
 		}
 	}
 
 	@Override
 	public void onBackPressed() {
-		if (mShowSurface) {
-			mShowSurface = false;
-			setContentView(R.layout.activity_main);
+		if (mGLSurfaceView.getVisibility() == View.VISIBLE) {
+			mGLSurfaceView.setVisibility(View.INVISIBLE);
+			mListView.setVisibility(View.VISIBLE);
 		} else {
 			super.onBackPressed();
 		}

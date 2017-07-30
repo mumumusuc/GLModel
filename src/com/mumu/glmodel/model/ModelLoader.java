@@ -5,14 +5,17 @@ import java.io.InputStream;
 import java.lang.reflect.Field;
 import com.mumu.glmodel.R;
 import android.content.res.AssetManager;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.BitmapFactory.Options;
 import android.graphics.Matrix;
 
 public class ModelLoader {
 
-	public static native ModelCoordinate parseModelCoordinate(String src);
+	public static native ModelCoordinate[] parseModelCoordinate(String src);
 
-	public static native ModelMtl parseModelMtl(String src);
+	public static native ModelMtl[] parseModelMtl(String src);
 
 	public static String readAssert(AssetManager as, String file) {
 		StringBuilder sb = new StringBuilder();
@@ -38,15 +41,17 @@ public class ModelLoader {
 		return null;
 	}
 
-	public static Bitmap resizeBmp(Bitmap bitmap) {
-		if (bitmap.getWidth() > 512 || bitmap.getHeight() > 512) {
-			Matrix matrix = new Matrix();
-			float scale = 256.0f / (bitmap.getWidth() > bitmap.getHeight() ? bitmap.getWidth() : bitmap.getHeight());
-			matrix.postScale(scale, scale);
-			Bitmap resizeBmp = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
-			return resizeBmp;
+	public static Bitmap loadBmp(Resources res, int resID) {
+		Options opt = new Options();
+		opt.inJustDecodeBounds = true;
+		BitmapFactory.decodeResource(res, resID, opt);
+		if (opt.outWidth > 256 || opt.outHeight > 256) {
+			opt.inScaled = true;
+			int resize = Math.max(opt.outWidth / 256, opt.outHeight / 256);
+			opt.inSampleSize = resize / 2 * 2 + 1;
+			opt.inJustDecodeBounds = false;
 		}
-		return bitmap;
+		return BitmapFactory.decodeResource(res, resID, opt);
 	}
 
 	public static int getMipmapId(String name) {
@@ -62,7 +67,7 @@ public class ModelLoader {
 		}
 		return id;
 	}
-	
+
 	static {
 		System.loadLibrary("ModelLoader");
 	}

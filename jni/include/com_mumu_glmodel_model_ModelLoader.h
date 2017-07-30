@@ -10,17 +10,17 @@ extern "C" {
 /*
  * Class:     com_mumu_glmodel_model_ModelLoader
  * Method:    parseModelCoordinate
- * Signature: (Ljava/lang/String;)Lcom/mumu/glmodel/model/ModelCoordinate;
+ * Signature: (Ljava/lang/String;)[Lcom/mumu/glmodel/model/ModelCoordinate;
  */
-JNIEXPORT jobject JNICALL Java_com_mumu_glmodel_model_ModelLoader_parseModelCoordinate
+JNIEXPORT jobjectArray JNICALL Java_com_mumu_glmodel_model_ModelLoader_parseModelCoordinate
   (JNIEnv *, jclass, jstring);
 
 /*
  * Class:     com_mumu_glmodel_model_ModelLoader
  * Method:    parseModelMtl
- * Signature: (Ljava/lang/String;)Lcom/mumu/glmodel/model/ModelMtl;
+ * Signature: (Ljava/lang/String;)[Lcom/mumu/glmodel/model/ModelMtl;
  */
-JNIEXPORT jobject JNICALL Java_com_mumu_glmodel_model_ModelLoader_parseModelMtl
+JNIEXPORT jobjectArray JNICALL Java_com_mumu_glmodel_model_ModelLoader_parseModelMtl
   (JNIEnv *, jclass, jstring);
 
 #ifdef __cplusplus

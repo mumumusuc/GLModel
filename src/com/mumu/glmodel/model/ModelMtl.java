@@ -3,7 +3,12 @@ package com.mumu.glmodel.model;
 import android.graphics.Bitmap;
 
 public class ModelMtl {
-	public String mUseMtl;
+	public int _H_TEXTURE;
+	public int _H_TEXTURE_ADDR;
+	public int _H_TEXTURE_UNIT;
+	
+	public String mNewMtl;
+	public String mTextureName;
 	public Bitmap mTexture;
 	public float Ns = 0;
 	public float[] Ka = { 0, 0, 0 };
@@ -19,7 +24,8 @@ public class ModelMtl {
 				.append("Kd=[").append(Kd[0]+","+Kd[1]+","+Kd[2]).append("];\n")
 				.append("Ks=[").append(Ks[0]+","+Ks[1]+","+Ks[2]).append("];\n")
 				.append("Ni=").append(Ni).append(";\n")
-				.append("mUseMtl = ").append(mUseMtl).append(";\n")
+				.append("mNewMtl = ").append(mNewMtl).append(";\n")
+				.append("mTextureName = ").append(mTextureName).append(";\n")
 				.append("mTexture = ").append(mTexture).append(";\n")
 				.toString();
 	}

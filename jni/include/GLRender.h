@@ -15,18 +15,24 @@
 #define LOG_TAG "NDK_GLRender"
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
-#define ERROR -1
 
-GLint createProgram(const char*, const char*);
+#define ERROR NULL
+
+#define _STRIDE 4
+
+GLuint createProgram(const char*, const char*);
 GLuint loadShader(GLenum, const char*);
-void resizeWindow(uint, uint);
-void bindBuffers(GLfloat*, uint, GLfloat*, uint, GLfloat*, uint, GLuint*);
-GLuint bindTexture(void*, uint, uint, GLuint);
-void render(GLuint,bool, GLuint, uint, GLuint, GLuint, GLfloat, GLfloat, GLfloat,
-		GLfloat, GLfloat, GLfloat, GLfloat, GLfloat, GLfloat, GLfloat, GLfloat);
-void rotateModel(float, float, float, float, float, float);
-void initShader(GLint, const char*, const char*);
-void clean();
 
+void bindBuffers(GLfloat*, uint, GLfloat*, uint, GLfloat*, uint, GLuint*);
+void deleteBuffers(GLuint*);
+void bindTexture(void*, uint, uint, uint,GLuint*);
+void deleteTexture(GLuint*);
+
+void render(GLuint, bool, GLuint, uint, GLuint, GLuint, GLfloat, GLfloat,
+		GLfloat, GLfloat, GLfloat, GLfloat, GLfloat, GLfloat, GLfloat, GLfloat,
+		GLfloat);
+
+void resizeWindow(uint, uint);
+void rotateModel(float, float, float, float, float, float);
 #endif
 

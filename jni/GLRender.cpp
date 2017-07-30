@@ -1,4 +1,4 @@
-#include "GLRender.h"
+#include "include/GLRender.h"
 
 using namespace vmath;
 
@@ -20,17 +20,18 @@ static GLfloat Kd[3] = { 0.8f, 0.8f, 0.8f };
 static GLfloat Ks[3] = { 0.05f, 0.05f, 0.05f };
 static GLfloat Ni = 1.f;
 
-GLint createProgram(const char* vert, const char* frag) {
-	GLint progHandler = ERROR;
+GLuint createProgram(const char* vert, const char* frag) {
+	GLuint progHandler = ERROR;
 	GLint linked;
 	progHandler = glCreateProgram();
 	if (progHandler == 0)
-		return -1;
-	initShader(progHandler, vert, frag);
-
+		return ERROR;
+	GLuint h_vertexShader = loadShader(GL_VERTEX_SHADER, vert);
+	GLuint h_fragmentShader = loadShader(GL_FRAGMENT_SHADER, frag);
+	glAttachShader(progHandler, h_vertexShader);
+	glAttachShader(progHandler, h_fragmentShader);
 	glLinkProgram(progHandler);
 	glGetProgramiv(progHandler, GL_LINK_STATUS, &linked);
-
 	if (!linked) {
 		GLint infoLen = 0;
 		glGetProgramiv(progHandler, GL_INFO_LOG_LENGTH, &infoLen);
@@ -41,9 +42,9 @@ GLint createProgram(const char* vert, const char* frag) {
 			free(infoLog);
 		}
 		glDeleteProgram(progHandler);
-		return -2;
+		return ERROR;
 	}
-	LOGI("create glprog = %d", progHandler);
+	LOGI("create gl_program = %d", progHandler);
 	return progHandler;
 }
 
@@ -53,16 +54,6 @@ void resizeWindow(uint width, uint height) {
 	float aspect = (float) g_height / g_width;
 	g_proj = frustum(-2.0f, 2.0f, -2.0f * aspect, 2.0f * aspect, 10.f, 8000.0f);
 	glViewport(0, 0, g_width, g_height);
-}
-
-void initShader(GLint prog, const char* vertexShader,
-		const char* fragmentShader) {
-	GLuint h_vertexShader;
-	GLuint h_fragmentShader;
-	h_vertexShader = loadShader(GL_VERTEX_SHADER, vertexShader);
-	h_fragmentShader = loadShader(GL_FRAGMENT_SHADER, fragmentShader);
-	glAttachShader(prog, h_vertexShader);
-	glAttachShader(prog, h_fragmentShader);
 }
 
 GLuint loadShader(GLenum type, const char *shaderSrc) {
@@ -92,33 +83,29 @@ GLuint loadShader(GLenum type, const char *shaderSrc) {
 
 void bindBuffers(GLfloat* vertex, uint v_size, GLfloat* texture, uint t_size,
 		GLfloat* normals, uint n_size, GLuint* result) {
-	GLuint vao;
-	glGenVertexArrays(1, &vao);
-	glBindVertexArray(vao);
-	GLuint vbo_v;
+	glGenVertexArrays(1, result);
+	glBindVertexArray(*result);
 	if (v_size) {
-		glGenBuffers(1, &vbo_v);
-		glBindBuffer(GL_ARRAY_BUFFER, vbo_v);
+		glGenBuffers(1, result + 1);
+		glBindBuffer(GL_ARRAY_BUFFER, *(result + 1));
 		glBufferData(
 		GL_ARRAY_BUFFER, v_size * sizeof(GLfloat), vertex,
 		GL_STATIC_DRAW);
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (GLubyte *) 0);
 		glEnableVertexAttribArray(0);
 	}
-	GLuint vbo_t;
 	if (t_size) {
-		glGenBuffers(1, &vbo_t);
-		glBindBuffer(GL_ARRAY_BUFFER, vbo_t);
+		glGenBuffers(1, result + 2);
+		glBindBuffer(GL_ARRAY_BUFFER, *(result + 2));
 		glBufferData(
 		GL_ARRAY_BUFFER, t_size * sizeof(GLfloat), texture,
 		GL_STATIC_DRAW);
 		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (GLubyte *) 0);
 		glEnableVertexAttribArray(1);
 	}
-	GLuint vbo_n;
 	if (n_size) {
-		glGenBuffers(1, &vbo_n);
-		glBindBuffer(GL_ARRAY_BUFFER, vbo_n);
+		glGenBuffers(1, result + 3);
+		glBindBuffer(GL_ARRAY_BUFFER, *(result + 3));
 		glBufferData(
 		GL_ARRAY_BUFFER, n_size * sizeof(GLfloat), normals,
 		GL_STATIC_DRAW);
@@ -126,11 +113,6 @@ void bindBuffers(GLfloat* vertex, uint v_size, GLfloat* texture, uint t_size,
 		glEnableVertexAttribArray(2);
 	}
 	glBindVertexArray(0);
-	LOGI("bindBuffers -> result = [%d,%d,%d,%d]", vao, vbo_v, vbo_t, vbo_n);
-	result[0] = vao;
-	result[1] = vbo_v;
-	result[2] = vbo_t;
-	result[3] = vbo_n;
 }
 
 void render(GLuint prog, bool _clear, GLuint _vao, uint _size, GLuint _texture,
@@ -193,19 +175,14 @@ void render(GLuint prog, bool _clear, GLuint _vao, uint _size, GLuint _texture,
 	glDisable(GL_BLEND);
 }
 
-int loadBitmapTextrue(jobjectArray jbitmaps) {
-	return 0;
-}
-
-GLuint bindTexture(void* pixels, uint w, uint h, GLuint _unit) {
+void bindTexture(void* pixels, uint w, uint h, uint _unit, GLuint* _texture) {
 	if (pixels == 0) {
 		LOGE("load texture failed! invalid image");
-		return ERROR;
+		return;
 	}
 	glActiveTexture(GL_TEXTURE0 + _unit);
-	GLuint _texture;
-	glGenTextures(1, &_texture);
-	glBindTexture(GL_TEXTURE_2D, _texture);
+	glGenTextures(1, _texture);
+	glBindTexture(GL_TEXTURE_2D, *_texture);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -215,7 +192,6 @@ GLuint bindTexture(void* pixels, uint w, uint h, GLuint _unit) {
 	GL_RGBA,
 	GL_UNSIGNED_BYTE, pixels);
 	glBindTexture(GL_TEXTURE_2D, 0);
-	return _texture;
 }
 
 void rotateModel(float deg_x, float deg_y, float deg_z, float x, float y,
@@ -232,10 +208,32 @@ void rotateModel(float deg_x, float deg_y, float deg_z, float x, float y,
 	}
 }
 
-void clean() {
-	//	glDeleteBuffers(3, vbo);
-	//	glDeleteBuffers(1, &ebo);
-	//	glDeleteVertexArrays(1, &vao);
-	//	g_textures.clear();
-	//	vector<BmpTexture>(g_textures).swap(g_textures);
+void deleteBuffers(GLuint* _handle) {
+	LOGI("deleteBuffers = %d + [%d,%d,%d,%d]", _handle, *(_handle),
+			*(_handle + 1), *(_handle + 2), *(_handle + 3));
+	glDeleteVertexArrays(1, _handle);
+	glBindBuffer(GL_ARRAY_BUFFER, *(_handle + 1));
+	glBufferData(GL_ARRAY_BUFFER, 0, (const void*) NULL, GL_STATIC_DRAW);
+	glDeleteBuffers(1, _handle + 1);
+	glBindBuffer(GL_ARRAY_BUFFER, *(_handle + 2));
+	glBufferData(GL_ARRAY_BUFFER, 0, (const void*) NULL, GL_STATIC_DRAW);
+	glDeleteBuffers(1, _handle + 2);
+	glBindBuffer(GL_ARRAY_BUFFER, *(_handle + 3));
+	glBufferData(GL_ARRAY_BUFFER, 0, (const void*) NULL, GL_STATIC_DRAW);
+	glDeleteBuffers(1, _handle + 3);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	free(_handle);
+}
+
+void deleteTexture(GLuint* _texture) {
+	if (_texture == NULL)
+		return;
+	glBindTexture(GL_TEXTURE_2D, *_texture);
+	glTexImage2D(
+	GL_TEXTURE_2D, 0, GL_RGBA, 0, 0, 0,
+	GL_RGBA,
+	GL_UNSIGNED_BYTE, (const void*) NULL);
+	glDeleteTextures(1, _texture);
+	glBindTexture(GL_TEXTURE_2D, 0);
+	free(_texture);
 }
