@@ -34,4 +34,18 @@ public class ModelCoordinate {
 				.append("mUseMtl = ").append(mUseMtl).append(";\n")
 				.toString();
 	};
+	
+	public long getMemeryUsage(){
+		long total = 0; 
+		if(mVertexCoBuffer != null){
+			total += mVertexCoBuffer.length*Float.BYTES;
+		}
+		if(mTextureCoBuffer != null){
+			total += mTextureCoBuffer.length*Float.BYTES;
+		}
+		if(mNormalCoBuffer != null){
+			total += mNormalCoBuffer.length*Float.BYTES;
+		}
+		return total;
+	}
 }

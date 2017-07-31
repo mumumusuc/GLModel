@@ -66,7 +66,7 @@ JNIEXPORT void JNICALL Java_com_mumu_glmodel_render_NativeRenderer_bindBuffers(
 		_n = env->GetFloatArrayElements(n, 0);
 	}
 	//绑定到GPU
-	GLuint *_handle = (GLuint*) malloc(_STRIDE * sizeof(GLuint));
+	GLuint *_handle = (GLuint*) malloc(STRIDE * sizeof(GLuint));
 	bindBuffers(_v, v_size, _t, t_size, _n, n_size, _handle);
 	LOGI("bindBuffers -> _handle = %d + [%d,%d,%d,%d]", _handle, _handle[0],
 			_handle[1], _handle[2], _handle[3]);
@@ -180,10 +180,16 @@ JNIEXPORT void JNICALL Java_com_mumu_glmodel_render_NativeRenderer_resizeWindow(
 	resizeWindow(w, h);
 }
 
-JNIEXPORT void JNICALL Java_com_mumu_glmodel_render_NativeRenderer_rotateModel(
-		JNIEnv *env, jobject obj, jfloat dx, jfloat dy, jfloat dz, jfloat x,
-		jfloat y, jfloat z) {
-	rotateModel(dx, dy, dz, x, y, z);
+JNIEXPORT void JNICALL Java_com_mumu_glmodel_render_NativeRenderer_moveModel(
+		JNIEnv *env, jobject obj, jfloat x, jfloat y, jfloat z, jfloat dx,
+		jfloat dy, jfloat dz) {
+	move(TYPE_MODEL, x, y, z, dx, dy, dz);
+}
+
+JNIEXPORT void JNICALL Java_com_mumu_glmodel_render_NativeRenderer_moveCamera(
+		JNIEnv *env, jobject obj, jfloat x, jfloat y, jfloat z, jfloat dx,
+		jfloat dy, jfloat dz) {
+	move(TYPE_CAMERA, x, y, z, dx, dy, dz);
 }
 
 JNIEXPORT void JNICALL Java_com_mumu_glmodel_render_NativeRenderer_clear(

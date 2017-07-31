@@ -49,16 +49,20 @@ public class GLRender implements GLRenderer {
 	public void setRenderModel(ModelStruct[] models) {
 		if (models != null) {
 			this.models = models;
+			long c_total = 0, m_total = 0, total = 0;
 			for (int i = 0; i < models.length; i++) {
 				NativeRenderer.bindBuffers(models[i].mCoordinate);
 				if (models[i].mMtl != null) {
 					models[i].mMtl._H_TEXTURE_UNIT = i;
 					NativeRenderer.bindTexture(models[i].mMtl);
-				}
-				if (models[i].mMtl == null) {
+					m_total += models[i].mMtl.getMemeryUsage();
+				} else {
 					models[i].mMtl = new ModelMtl();
 				}
+				c_total += models[i].mCoordinate.getMemeryUsage();
+				total += models[i].getMemeryUsage();
 			}
+			Log.i(TAG, "+usage = " + total + "Byte, +co = " + c_total + "Byte, +mtl = " + m_total);
 		}
 	}
 
@@ -82,14 +86,14 @@ public class GLRender implements GLRenderer {
 
 	@Override
 	public void onDrawFrame(GL10 gl) {
-		long s = System.currentTimeMillis();
+		// long s = System.currentTimeMillis();
 		if (models != null) {
 			for (int i = 0; i < models.length; i++) {
 				render(mProgHandler, i == 0, models[i]);
 			}
 		}
-		long d = System.currentTimeMillis() - s;
-		Log.i(TAG, "fps = " + (1000 / (d == 0 ? 0.001 : d)));
+		// long d = System.currentTimeMillis() - s;
+		// Log.i(TAG, "fps = " + (1000 / (d == 0 ? 0.001 : d)));
 	}
 
 	private void render(int prog, boolean clear, ModelStruct model) {

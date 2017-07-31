@@ -194,17 +194,16 @@ void bindTexture(void* pixels, uint w, uint h, uint _unit, GLuint* _texture) {
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void rotateModel(float deg_x, float deg_y, float deg_z, float x, float y,
-		float z) {
-	float _x = x == 0 ? 0 : x / abs(x);
-	float _y = y == 0 ? 0 : y / abs(y);
-	float _z = z == 0 ? 0 : z / abs(z);
-	g_model_ges = rotate(deg_x, _x, 0.0f, 0.0f) * rotate(deg_y, 0.0f, _y, 0.0f)
-			* g_model_ges;
-	if (deg_z != 0) {
-		mat4 trans = translate(deg_z * normalize(v_model_loc - v_camera_loc));
-		g_camera = trans * g_camera;
-		v_camera_loc = vec3(g_camera[3][0], g_camera[3][1], g_camera[3][2]);
+void move(int type, float x, float y, float z, float dx, float dy, float dz) {
+	if (type == TYPE_MODEL) {
+		v_model_loc = vec3(x, y, z);
+		g_model_loc = translate(v_model_loc);
+		g_model_ges = rotate(dx, 1.f, 0.f, 0.f) * rotate(dy, 0.f, 1.f, 0.f)
+				* rotate(dz, 0.f, 0.f, 1.f);
+	}
+	if (type == TYPE_CAMERA) {
+		v_camera_loc = vec3(x, y, z);
+		g_camera = lookat(v_camera_loc, v_model_loc, vec3(0.0f, 1.0f, 0.0f));
 	}
 }
 

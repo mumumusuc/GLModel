@@ -18,14 +18,16 @@
 
 #define ERROR NULL
 
-#define _STRIDE 4
+#define STRIDE 4
+#define TYPE_MODEL 0
+#define TYPE_CAMERA 1
 
 GLuint createProgram(const char*, const char*);
 GLuint loadShader(GLenum, const char*);
 
 void bindBuffers(GLfloat*, uint, GLfloat*, uint, GLfloat*, uint, GLuint*);
 void deleteBuffers(GLuint*);
-void bindTexture(void*, uint, uint, uint,GLuint*);
+void bindTexture(void*, uint, uint, uint, GLuint*);
 void deleteTexture(GLuint*);
 
 void render(GLuint, bool, GLuint, uint, GLuint, GLuint, GLfloat, GLfloat,
@@ -33,6 +35,6 @@ void render(GLuint, bool, GLuint, uint, GLuint, GLuint, GLfloat, GLfloat,
 		GLfloat);
 
 void resizeWindow(uint, uint);
-void rotateModel(float, float, float, float, float, float);
+void move(int type, float, float, float, float, float, float);
 #endif
 

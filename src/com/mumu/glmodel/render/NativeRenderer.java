@@ -2,7 +2,6 @@ package com.mumu.glmodel.render;
 
 import com.mumu.glmodel.model.ModelCoordinate;
 import com.mumu.glmodel.model.ModelMtl;
-import com.mumu.glmodel.model.ModelStruct;
 
 import android.graphics.Bitmap;
 
@@ -25,7 +24,9 @@ public class NativeRenderer {
 
 	public static final native void resizeWindow(int width, int height);
 
-	public static final native void rotateModel(float dx, float dy, float dz, float x, float y, float z);
+	public static final native void moveModel(float x, float y, float z, float dx, float dy, float dz);
+	
+	public static final native void moveCamera(float x, float y, float z, float dx, float dy, float dz);
 
 	public static final native void clear(int type, int addr);
 

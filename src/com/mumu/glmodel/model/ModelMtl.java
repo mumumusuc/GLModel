@@ -29,4 +29,12 @@ public class ModelMtl {
 				.append("mTexture = ").append(mTexture).append(";\n")
 				.toString();
 	}
+	
+	public long getMemeryUsage(){
+		long total = 0; 
+		if(mTexture != null){
+			total += mTexture.getByteCount();
+		}
+		return total;
+	}
 }

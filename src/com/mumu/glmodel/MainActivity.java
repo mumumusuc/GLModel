@@ -52,7 +52,7 @@ public class MainActivity extends Activity implements OnItemClickListener {
 		mRender = new GLRender(this);
 		mGLSurfaceView.setRenderer(mRender);
 		mGLSurfaceView.getHolder().setFormat(PixelFormat.TRANSPARENT);
-	//	mGLSurfaceView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+		// mGLSurfaceView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
 		mGLSurfaceView.setZOrderOnTop(true);
 	}
 
@@ -119,17 +119,11 @@ public class MainActivity extends Activity implements OnItemClickListener {
 			} else {
 				String co = ModelLoader.readAssert(getAssets(), "model/" + mList.get(arg[0]) + ".obj");
 				String mtl = ModelLoader.readAssert(getAssets(), "model/" + mList.get(arg[0]) + ".mtl");
-				ModelCoordinate[] cos = ModelLoader.parseModelCoordinate(co);
+				ModelCoordinate[] cos = null;
+				cos = ModelLoader.parseModelCoordinate(co);
 				Log.d(TAG, "load coordinate use" + (System.currentTimeMillis() - s) + "ms");
-				if (cos != null) {
-					Log.d(TAG, "cooridinates_size=" + cos.length);
-					for (int i = 0; i < cos.length; i++) {
-						Log.d(TAG, "cooridinate[" + i + "] = " + cos[i].toString());
-					}
-				}
-				long t = System.currentTimeMillis();
 				ModelMtl[] mtls = ModelLoader.parseModelMtl(mtl);
-				Log.d(TAG, "load mtl use" + (System.currentTimeMillis() - t) + "ms");
+				Log.d(TAG, "load mtl use" + (System.currentTimeMillis() - s) + "ms");
 				if (mtls != null) {
 					Log.d(TAG, "mtls_size=" + mtls.length);
 					for (int i = 0; i < mtls.length; i++) {
@@ -138,19 +132,25 @@ public class MainActivity extends Activity implements OnItemClickListener {
 						Log.d(TAG, "mtl[" + i + "] = " + mtls[i].toString());
 					}
 				}
-				mModels = new ModelStruct[cos.length];
-				for (int i = 0; i < cos.length; i++) {
-					mModels[i] = new ModelStruct(cos[i], null);
-					if (mtls != null) {
-						String useMtl = cos[i].mUseMtl;
-						for (int j = 0; j < mtls.length; j++) {
-							if (useMtl.equals(mtls[j].mNewMtl)) {
-								mModels[i].mMtl = mtls[j];
+				if (cos != null) {
+					Log.d(TAG, "cooridinates_size=" + cos.length);
+					for (int i = 0; i < cos.length; i++) {
+						Log.d(TAG, "cooridinate[" + i + "] = " + cos[i].toString());
+					}
+					mModels = new ModelStruct[cos.length];
+					for (int i = 0; i < cos.length; i++) {
+						mModels[i] = new ModelStruct(cos[i], null);
+						if (mtls != null) {
+							String useMtl = cos[i].mUseMtl;
+							for (int j = 0; j < mtls.length; j++) {
+								if (useMtl.equals(mtls[j].mNewMtl)) {
+									mModels[i].mMtl = mtls[j];
+								}
 							}
 						}
 					}
+					mModelsMap.put(arg[0], mModels);
 				}
-				mModelsMap.put(arg[0], mModels);
 			}
 			return mModels;
 		}

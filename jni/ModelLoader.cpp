@@ -120,6 +120,7 @@ int load_coordinates(const char* obj, vector<ModelObject>& models) {
 
 	LOGE("load_coordinates -> read file end");
 	LOGE("load_coordinates -> build indice now");
+
 	for (int i = 0, size = faces.size(); i < size; i++) {
 		ModelObject* model = new ModelObject();
 		FaceCache face = faces[i];
@@ -135,8 +136,9 @@ int load_coordinates(const char* obj, vector<ModelObject>& models) {
 		face.fn.clear();
 		vector<ivec3>(face.fn).swap(face.fn);
 		models.push_back(*model);
-		//	delete model;
 	}
+	faces.clear();
+	vector<FaceCache>(faces).swap(faces);
 	LOGE("load_coordinates -> build indice end");
 	v.clear();
 	vector<vec3>(v).swap(v);

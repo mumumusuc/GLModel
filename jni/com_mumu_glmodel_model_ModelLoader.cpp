@@ -17,6 +17,7 @@ JNIEXPORT jobjectArray JNICALL Java_com_mumu_glmodel_model_ModelLoader_parseMode
 	env->ReleaseStringUTFChars(model, _model);
 	if (!model_size)
 		return NULL;
+
 	jclass _c_ModelCoordinate = env->FindClass(
 			"com/mumu/glmodel/model/ModelCoordinate");
 	if (_c_ModelCoordinate == 0)
@@ -54,14 +55,17 @@ JNIEXPORT jobjectArray JNICALL Java_com_mumu_glmodel_model_ModelLoader_parseMode
 	for (int i = 0; i < model_size; i++) {
 		jobject _o_instance = env->NewObject(_c_ModelCoordinate, _m_init);
 		ModelObject object = objects[i];
-		jfieldID _f_mUseMtl = env->GetFieldID(_c_ModelCoordinate, "mUseMtl",
-				"Ljava/lang/String;");
-		if (_f_mUseMtl == 0)
-			LOGE("error on get  mUseMtl");
-		jstring _mUseMtl = env->NewStringUTF(object.usemtl.c_str());
-		env->SetObjectField(_o_instance, _f_mUseMtl, _mUseMtl);
-		//	env->ReleaseStringUTFChars(_mUseMtl, object.usemtl.c_str());
-		env->DeleteLocalRef(_mUseMtl);
+
+		if (!object.usemtl.empty()) {
+			jfieldID _f_mUseMtl = env->GetFieldID(_c_ModelCoordinate, "mUseMtl",
+					"Ljava/lang/String;");
+			if (_f_mUseMtl == 0)
+				LOGE("error on get  mUseMtl");
+			jstring _mUseMtl = env->NewStringUTF(object.usemtl.c_str());
+			env->SetObjectField(_o_instance, _f_mUseMtl, _mUseMtl);
+			env->ReleaseStringUTFChars(_mUseMtl, object.usemtl.c_str());
+			env->DeleteLocalRef(_mUseMtl);
+		}
 		//重建索引
 		const uint v_size = object.v_size;
 		const uint t_size = object.t_size;
@@ -70,36 +74,36 @@ JNIEXPORT jobjectArray JNICALL Java_com_mumu_glmodel_model_ModelLoader_parseMode
 				n_size);
 		//顶点
 		if (v_size) {
-			env->SetIntField(_o_instance, _f_mVertexSize, v_size);
-			jfloatArray _vertex_buffer = env->NewFloatArray(v_size);
-			env->SetFloatArrayRegion(_vertex_buffer, 0, v_size, object.v);
-			env->SetObjectField(_o_instance, _f_mVertexCoBuffer,
-					_vertex_buffer);
-			env->DeleteLocalRef(_vertex_buffer);
+		 env->SetIntField(_o_instance, _f_mVertexSize, v_size);
+		 jfloatArray _vertex_buffer = env->NewFloatArray(v_size);
+		 env->SetFloatArrayRegion(_vertex_buffer, 0, v_size, object.v);
+		 env->SetObjectField(_o_instance, _f_mVertexCoBuffer,
+		 _vertex_buffer);
+		 env->DeleteLocalRef(_vertex_buffer);
 			free(object.v);
 			object.v = NULL;
 			LOGI("load_model_coordinate -> for v freedom !!!");
 		}
 		//纹理
 		if (t_size) {
-			env->SetIntField(_o_instance, _f_mTextureSize, t_size);
-			jfloatArray _texture_buffer = env->NewFloatArray(t_size);
-			env->SetFloatArrayRegion(_texture_buffer, 0, t_size, object.vt);
-			env->SetObjectField(_o_instance, _f_mTextureCoBuffer,
-					_texture_buffer);
-			env->DeleteLocalRef(_texture_buffer);
+		 env->SetIntField(_o_instance, _f_mTextureSize, t_size);
+		 jfloatArray _texture_buffer = env->NewFloatArray(t_size);
+		 env->SetFloatArrayRegion(_texture_buffer, 0, t_size, object.vt);
+		 env->SetObjectField(_o_instance, _f_mTextureCoBuffer,
+		 _texture_buffer);
+		 env->DeleteLocalRef(_texture_buffer);
 			free(object.vt);
 			object.vt = NULL;
 			LOGI("load_model_coordinate -> for vt freedom !!!");
 		}
 		//法线
 		if (n_size) {
-			env->SetIntField(_o_instance, _f_mNormalSize, n_size);
-			jfloatArray _normal_buffer = env->NewFloatArray(n_size);
-			env->SetFloatArrayRegion(_normal_buffer, 0, n_size, object.vn);
-			env->SetObjectField(_o_instance, _f_mNormalCoBuffer,
-					_normal_buffer);
-			env->DeleteLocalRef(_normal_buffer);
+		 env->SetIntField(_o_instance, _f_mNormalSize, n_size);
+		 jfloatArray _normal_buffer = env->NewFloatArray(n_size);
+		 env->SetFloatArrayRegion(_normal_buffer, 0, n_size, object.vn);
+		 env->SetObjectField(_o_instance, _f_mNormalCoBuffer,
+		 _normal_buffer);
+		 env->DeleteLocalRef(_normal_buffer);
 			free(object.vn);
 			object.vn = NULL;
 			LOGI("load_model_coordinate -> for vn freedom !!!");
@@ -107,7 +111,10 @@ JNIEXPORT jobjectArray JNICALL Java_com_mumu_glmodel_model_ModelLoader_parseMode
 		env->SetObjectArrayElement(_o_coordinates, i, _o_instance);
 		env->DeleteLocalRef(_o_instance);
 	}
+	objects.clear();
+	vector<ModelObject>(objects).swap(objects);
 	return _o_coordinates;
+	//return NULL;
 }
 
 JNIEXPORT jobjectArray JNICALL Java_com_mumu_glmodel_model_ModelLoader_parseModelMtl(

@@ -51,10 +51,18 @@ JNIEXPORT void JNICALL Java_com_mumu_glmodel_render_NativeRenderer_resizeWindow(
 
 /*
  * Class:     com_mumu_glmodel_render_NativeRenderer
- * Method:    rotateModel
+ * Method:    moveModel
  * Signature: (FFFFFF)V
  */
-JNIEXPORT void JNICALL Java_com_mumu_glmodel_render_NativeRenderer_rotateModel(
+JNIEXPORT void JNICALL Java_com_mumu_glmodel_render_NativeRenderer_moveModel(
+		JNIEnv *, jobject, jfloat, jfloat, jfloat, jfloat, jfloat, jfloat);
+
+/*
+ * Class:     com_mumu_glmodel_render_NativeRenderer
+ * Method:    moveCamera
+ * Signature: (FFFFFF)V
+ */
+JNIEXPORT void JNICALL Java_com_mumu_glmodel_render_NativeRenderer_moveCamera(
 		JNIEnv *, jobject, jfloat, jfloat, jfloat, jfloat, jfloat, jfloat);
 
 /*
